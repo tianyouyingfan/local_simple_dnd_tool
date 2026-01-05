@@ -93,6 +93,9 @@ createApp({
         
         // 监听背景裁剪模态框
         watch(() => ui.imageCropper.open, (isOpen) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:95',message:'背景裁剪模态框watch触发',data:{isOpen,imageUrl:ui.imageCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             if (isOpen) {
                 // 使用多个nextTick确保DOM完全渲染
                 nextTick(() => {
@@ -111,6 +114,9 @@ createApp({
 
         // 监听头像裁剪模态框
         watch(() => ui.avatarCropper.open, (isOpen) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:113',message:'头像裁剪模态框watch触发',data:{isOpen,imageUrl:ui.avatarCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             if (isOpen) {
                 // 使用多个nextTick确保DOM完全渲染
                 nextTick(() => {
@@ -680,8 +686,14 @@ createApp({
             
             reader.onload = (event) => {
                 try {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:681',message:'背景图片FileReader.onload触发',data:{hasResult:!!event.target?.result,resultLength:event.target?.result?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     // 验证读取结果
                     if (!event.target?.result) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:686',message:'背景图片读取结果为空',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
                         toast('错误：图片读取失败，请重试。');
                         e.target.value = '';
                         return;
@@ -689,9 +701,18 @@ createApp({
                     
                     // 设置图片URL并打开裁剪器
                     ui.imageCropper.imageUrl = event.target.result;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:692',message:'背景图片URL已设置，准备打开模态框',data:{imageUrlLength:ui.imageCropper.imageUrl?.length,imageUrlPrefix:ui.imageCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     console.log("背景图片URL已设置:", ui.imageCropper.imageUrl?.substring(0, 50) + "...");
                     ui.imageCropper.open = true;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:693',message:'背景图片模态框已打开',data:{isOpen:ui.imageCropper.open},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                 } catch (error) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:695',message:'背景图片处理异常',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     console.error("处理图片时发生错误:", error);
                     toast('错误：处理图片时发生错误，请重试。');
                     e.target.value = '';
@@ -708,12 +729,20 @@ createApp({
             
             const canvas = cropperCanvas.value;
             const modal = cropperModal.value;
-            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:705',message:'背景裁剪器重试检查DOM',data:{retryCount,hasCanvas:!!canvas,hasModal:!!modal,imageUrl:ui.imageCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             if (!canvas || !modal) {
                 if (retryCount < maxRetries) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:713',message:'背景裁剪器DOM未找到，准备重试',data:{retryCount,nextRetry:retryCount+1},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    // #endregion
                     console.warn(`背景裁剪器DOM元素未找到，正在重试 (${retryCount + 1}/${maxRetries})`);
                     setTimeout(() => initCropperWithRetry(retryCount + 1), retryDelay * (retryCount + 1));
                 } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:717',message:'背景裁剪器DOM未找到，达到最大重试次数',data:{retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    // #endregion
                     console.error("背景裁剪器Canvas未找到，已达到最大重试次数");
                     toast("错误：裁剪器初始化失败，请刷新页面后重试。");
                     ui.imageCropper.open = false;
@@ -722,6 +751,9 @@ createApp({
             }
             
             // DOM元素已找到，继续正常初始化
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:725',message:'背景裁剪器DOM找到，调用initCropper',data:{retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             initCropper();
         }
         
@@ -738,18 +770,27 @@ createApp({
             bgSourceImage.value = img;
             
             img.onerror = (error) => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:740',message:'背景图片加载失败',data:{imageUrl:ui.imageCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.error("背景图片加载失败:", ui.imageCropper.imageUrl, error);
                 toast("图片加载失败，请检查文件格式或重试。");
                 ui.imageCropper.open = false;
             };
             
             img.onabort = () => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:746',message:'背景图片加载被取消',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.warn("背景图片加载被取消:", ui.imageCropper.imageUrl);
                 toast("图片加载被取消。");
                 ui.imageCropper.open = false;
             };
             
             img.onload = () => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:752',message:'背景图片加载成功',data:{width:img.naturalWidth,height:img.naturalHeight,complete:img.complete},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.log("背景图片加载成功，尺寸:", img.naturalWidth, "x", img.naturalHeight);
                 
                 // 更严格的图片完整性检查
@@ -798,29 +839,44 @@ createApp({
             
             // 设置图片源，确保URL有效
             if (!ui.imageCropper.imageUrl) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:800',message:'背景图片URL无效',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 toast("错误：没有有效的图片URL");
                 ui.imageCropper.open = false;
                 return;
             }
             
             console.log("开始加载背景图片，URL:", ui.imageCropper.imageUrl?.substring(0, 50) + "...");
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:807',message:'设置背景图片src',data:{imageUrlLength:ui.imageCropper.imageUrl?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             img.src = ui.imageCropper.imageUrl;
         }
         function drawCropper(img) {
             const canvas = cropperCanvas.value;
             if (!canvas) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:810',message:'drawCropper Canvas未找到',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
                 console.error("drawCropper: Canvas元素未找到");
                 return;
             }
             
             const ctx = canvas.getContext('2d');
             if (!ctx) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:817',message:'drawCropper 无法获取Canvas上下文',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
                 console.error("drawCropper: 无法获取Canvas上下文");
                 return;
             }
             
             console.log("drawCropper: Canvas尺寸:", canvas.width, "x", canvas.height);
             console.log("drawCropper: 裁剪框位置:", bgCropBox);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:822',message:'drawCropper 开始绘制',data:{canvasWidth:canvas.width,canvasHeight:canvas.height,cropBox:bgCropBox},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -937,10 +993,19 @@ createApp({
                 
                 // 根据当前编辑器类型设置背景图片
                 const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:939',message:'背景图片确认裁剪，数据URL生成',data:{dataUrlLength:dataUrl?.length,activeEditor:ui.activeEditor,dataUrlPrefix:dataUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
                 if (ui.activeEditor === 'monster') {
                     uiState.monsterDraft.backgroundImage = dataUrl;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:941',message:'背景图片已赋值给monsterDraft',data:{hasBackgroundImage:!!uiState.monsterDraft.backgroundImage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
                 } else if (ui.activeEditor === 'pc') {
                     uiState.pcDraft.backgroundImage = dataUrl;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:943',message:'背景图片已赋值给pcDraft',data:{hasBackgroundImage:!!uiState.pcDraft.backgroundImage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
                 }
                 
                 ui.imageCropper.open = false;
@@ -989,8 +1054,14 @@ createApp({
             
             reader.onload = (event) => {
                 try {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:990',message:'头像图片FileReader.onload触发',data:{hasResult:!!event.target?.result,resultLength:event.target?.result?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     // 验证读取结果
                     if (!event.target?.result) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:993',message:'头像图片读取结果为空',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
                         toast('错误：头像读取失败，请重试。');
                         e.target.value = '';
                         return;
@@ -998,9 +1069,18 @@ createApp({
                     
                     // 设置图片URL并打开裁剪器
                     ui.avatarCropper.imageUrl = event.target.result;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1000',message:'头像图片URL已设置，准备打开模态框',data:{imageUrlLength:ui.avatarCropper.imageUrl?.length,imageUrlPrefix:ui.avatarCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     console.log("头像图片URL已设置:", ui.avatarCropper.imageUrl?.substring(0, 50) + "...");
                     ui.avatarCropper.open = true;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1002',message:'头像图片模态框已打开',data:{isOpen:ui.avatarCropper.open},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                 } catch (error) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1004',message:'头像图片处理异常',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     console.error("处理头像时发生错误:", error);
                     toast('错误：处理头像时发生错误，请重试。');
                     e.target.value = '';
@@ -1017,12 +1097,20 @@ createApp({
             
             const canvas = avatarCropperCanvas.value;
             const modal = avatarCropperModal.value;
-            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1014',message:'头像裁剪器重试检查DOM',data:{retryCount,hasCanvas:!!canvas,hasModal:!!modal,imageUrl:ui.avatarCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             if (!canvas || !modal) {
                 if (retryCount < maxRetries) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1022',message:'头像裁剪器DOM未找到，准备重试',data:{retryCount,nextRetry:retryCount+1},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    // #endregion
                     console.warn(`头像裁剪器DOM元素未找到，正在重试 (${retryCount + 1}/${maxRetries})`);
                     setTimeout(() => initAvatarCropperWithRetry(retryCount + 1), retryDelay * (retryCount + 1));
                 } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1026',message:'头像裁剪器DOM未找到，达到最大重试次数',data:{retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    // #endregion
                     console.error("头像裁剪器Canvas未找到，已达到最大重试次数");
                     toast("错误：头像裁剪器初始化失败，请刷新页面后重试。");
                     ui.avatarCropper.open = false;
@@ -1031,6 +1119,9 @@ createApp({
             }
             
             // DOM元素已找到，继续正常初始化
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1034',message:'头像裁剪器DOM找到，调用initAvatarCropper',data:{retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             initAvatarCropper();
         }
         
@@ -1047,18 +1138,27 @@ createApp({
             avatarSourceImage.value = img;
             
             img.onerror = (error) => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1049',message:'头像图片加载失败',data:{imageUrl:ui.avatarCropper.imageUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.error("头像图片加载失败:", ui.avatarCropper.imageUrl, error);
                 toast("头像图片加载失败，请检查文件格式或重试。");
                 ui.avatarCropper.open = false;
             };
             
             img.onabort = () => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1055',message:'头像图片加载被取消',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.warn("头像图片加载被取消:", ui.avatarCropper.imageUrl);
                 toast("头像图片加载被取消。");
                 ui.avatarCropper.open = false;
             };
             
             img.onload = () => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1061',message:'头像图片加载成功',data:{width:img.naturalWidth,height:img.naturalHeight,complete:img.complete},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.log("头像图片加载成功，尺寸:", img.naturalWidth, "x", img.naturalHeight);
                 
                 // 更严格的图片完整性检查
@@ -1106,29 +1206,44 @@ createApp({
             
             // 设置图片源，确保URL有效
             if (!ui.avatarCropper.imageUrl) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1108',message:'头像图片URL无效',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 toast("错误：没有有效的头像图片URL");
                 ui.avatarCropper.open = false;
                 return;
             }
             
             console.log("开始加载头像图片，URL:", ui.avatarCropper.imageUrl?.substring(0, 50) + "...");
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1115',message:'设置头像图片src',data:{imageUrlLength:ui.avatarCropper.imageUrl?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             img.src = ui.avatarCropper.imageUrl;
         }
         function drawAvatarCropper(img) {
             const canvas = avatarCropperCanvas.value;
             if (!canvas) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1118',message:'drawAvatarCropper Canvas未找到',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
                 console.error("drawAvatarCropper: Canvas元素未找到");
                 return;
             }
             
             const ctx = canvas.getContext('2d');
             if (!ctx) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1124',message:'drawAvatarCropper 无法获取Canvas上下文',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
                 console.error("drawAvatarCropper: 无法获取Canvas上下文");
                 return;
             }
             
             console.log("drawAvatarCropper: Canvas尺寸:", canvas.width, "x", canvas.height);
             console.log("drawAvatarCropper: 裁剪框位置:", avatarCropBox);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1130',message:'drawAvatarCropper 开始绘制',data:{canvasWidth:canvas.width,canvasHeight:canvas.height,cropBox:avatarCropBox},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -1208,12 +1323,21 @@ createApp({
                 );
                 
                 const dataUrl = tempCanvas.toDataURL('image/png');
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1210',message:'头像确认裁剪，数据URL生成',data:{dataUrlLength:dataUrl?.length,activeEditor:ui.activeEditor,dataUrlPrefix:dataUrl?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
                 
                 // 根据当前编辑器类型设置头像
                 if (ui.activeEditor === 'monster') {
                     uiState.monsterDraft.avatar = dataUrl;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1214',message:'头像已赋值给monsterDraft',data:{hasAvatar:!!uiState.monsterDraft.avatar},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
                 } else if (ui.activeEditor === 'pc') {
                     uiState.pcDraft.avatar = dataUrl;
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/c6cc19f4-976a-48c1-88c6-e3531de35a75',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.js:1216',message:'头像已赋值给pcDraft',data:{hasAvatar:!!uiState.pcDraft.avatar},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
                 }
                 
                 ui.avatarCropper.open = false;
@@ -1828,6 +1952,8 @@ createApp({
             currentActor, filteredMonsters, filteredAbilities, filteredActions, groupedParticipants,
             filteredMonstersForGroup, sortedCurrentActorActions, sortedActorViewerActions,
             sortedMonsterDraftActions, sortedPcDraftActions,
+            // DOM Refs
+            cropperCanvas, cropperModal, avatarCropperCanvas, avatarCropperModal,
             // Methods
             toast, removeToast, loadAll, seedDemo, toggleTypeFilter, toggleMonsterDraftType,
             toggleDamageModifier, toggleConditionImmunity, openActorViewer, startActorViewerEdit,
