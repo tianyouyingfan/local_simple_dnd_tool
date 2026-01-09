@@ -1,4 +1,4 @@
-import { reactive, ref, computed, watch } from 'vue';
+import { reactive, ref, computed } from 'vue';
 
 
 export const route = ref('battle'); // 默认跳到战斗页便于看布局
@@ -62,9 +62,7 @@ export const statusCatalog = ref([{
     name: '恐慌 Frightened',
     icon: '😱'
 },]);
-watch(battle, (newState) => {
-    localStorage.setItem('dnd-battle-state', JSON.stringify(newState));
-}, { deep: true });
+// 注意：battle 状态的持久化在 main.js 中处理（带节流和错误处理）
 export const ui = reactive({
     actorViewer: {
         open: false,
