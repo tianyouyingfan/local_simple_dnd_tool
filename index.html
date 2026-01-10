@@ -148,7 +148,7 @@
                     <!-- 查看模式 (v-if) -->
                     <div v-if="!ui.isEditingInitiative" class="initiative-bar hscroll" @dragover.prevent>
                         <div v-for="(p, idx) in battle.participants" :key="p.uid" class="init-tile"
-                            :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid}"
+                            :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid, 'just-joined': p.justJoined}"
                             :ref="(el) => { if (el) participantTiles.set(p.uid, el); }" draggable="true"
                             @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
                             <div class="init-header">
@@ -181,7 +181,7 @@
                     <!-- 编辑模式 (v-else) -->
                     <div v-else class="initiative-editor-list hscroll" @dragover.prevent>
                         <div v-for="(p, idx) in battle.participants" :key="p.uid" class="compact-tile"
-                            :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid}"
+                            :class="{'active-turn-highlight': currentActor && p.uid === currentActor.uid, 'just-joined': p.justJoined}"
                             draggable="true" @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
                             <div class="drag-handle" title="拖拽调整顺序">⠿</div>
                             <div class="avatar">

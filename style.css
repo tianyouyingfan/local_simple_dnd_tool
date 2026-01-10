@@ -298,15 +298,21 @@ summary.section-title {
 .init-tile {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 190px;
-    background: #1a1d21;
+    background: #14171a;
     border: 1px solid #2a2e34;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 8px;
-    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    /* Add transition for smooth effect */
-    justify-content: space-between;
+    min-width: 220px;
+    max-width: 220px;
+    position: relative;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.init-tile.just-joined {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    border-style: dashed;
 }
 
 .init-tile.active-turn-highlight {
@@ -1017,6 +1023,15 @@ body.loading #app {
     border-color: var(--accent);
     box-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
 }
+
+.compact-tile.just-joined {
+    background: #2a2e34;
+    opacity: 0.7;
+    filter: grayscale(1);
+    border-style: dashed;
+    border-color: #4a4e54;
+}
+
 
 .compact-tile .drag-handle {
     color: var(--muted);

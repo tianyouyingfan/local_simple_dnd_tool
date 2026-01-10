@@ -145,23 +145,7 @@ export function removeParticipant(uid) {
 export function nextTurn() {
     if (!battle.participants.length) return;
 
-    const actor = currentActor.value;
-    if (actor?.justJoined) {
-        delete actor.justJoined;
-        toast(`【${actor.name}】在本轮加入，其首个回合将被跳过。`);
-
-        battle.currentIndex++;
-        if (battle.currentIndex >= battle.participants.length) {
-            battle.currentIndex = 0;
-            battle.round++;
-        }
-        if (currentActor.value) {
-            decrementParticipantStatuses(currentActor.value);
-            decrementActionCooldowns(currentActor.value);
-        }
-        return;
-    }
-
+    // Handle end-of-turn logic for the *current* actor before moving
     const active = currentActor.value;
     let removed = false;
     if (active && active.hpCurrent <= 0 && active.type === 'monster') {
@@ -170,12 +154,56 @@ export function nextTurn() {
         toast(`怪物【${deadName}】已在回合结束后移除。`);
         removed = true;
     }
-    if (!removed) battle.currentIndex++;
 
-    if (battle.currentIndex >= battle.participants.length) {
-        battle.currentIndex = 0;
-        battle.round++;
+    // If current actor was removed, the next actor is already at currentIndex (array shifted left).
+    // So we usually wouldn't increment.
+    // However, if we just removed someone, the "next" person is now at the *same* index.
+    // BUT, we want to start the turn for the "next" person.
+    // If we don't increment, we stay at the same index, which is correct for the "next" person.
+    // But we still need to check if *that* person is `justJoined`.
+    
+    if (!removed) {
+        battle.currentIndex++;
     }
+
+    // Loop to find the next valid actor (skipping `justJoined` units)
+    // We limit the loop to avoid infinite loops (though with round increment it shouldn't happen)
+    let checks = 0;
+    const maxChecks = battle.participants.length * 2; // Safe upper bound
+
+    while (checks < maxChecks) {
+        // Handle wrap-around (New Round)
+        if (battle.currentIndex >= battle.participants.length) {
+            battle.currentIndex = 0;
+            battle.round++;
+            
+            // New round started: clear ALL `justJoined` flags
+            // This allows units added in the previous round to finally act
+            let clearedCount = 0;
+            battle.participants.forEach(p => {
+                if (p.justJoined) {
+                    delete p.justJoined;
+                    clearedCount++;
+                }
+            });
+            
+            toast(`第 ${battle.round} 回合开始` + (clearedCount ? ` (${clearedCount} 个新单位加入战斗)` : ''));
+        }
+
+        const candidate = battle.participants[battle.currentIndex];
+        if (!candidate) break; // Should not happen if length > 0
+
+        // If candidate is NOT new, they can act. Break loop.
+        if (!candidate.justJoined) {
+            break;
+        }
+
+        // If candidate IS new, skip them
+        // toast(`跳过新加入单位: ${candidate.name}`); // Optional
+        battle.currentIndex++;
+        checks++;
+    }
+
     if (currentActor.value) {
         decrementParticipantStatuses(currentActor.value);
         decrementActionCooldowns(currentActor.value);
