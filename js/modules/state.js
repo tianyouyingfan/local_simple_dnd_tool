@@ -144,7 +144,8 @@ export const ui = reactive({
     hpEditor: {
         open: false,
         targetUid: null,
-        delta: null
+        delta: null,
+        tempHpInput: null
     },
     monsterGroupManager: { open: false },
     monsterGroupEditor: { open: false, keyword: '' },

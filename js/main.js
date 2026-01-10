@@ -41,7 +41,7 @@ import {
   resetBattle, rollInitiative, setCurrentActor, removeParticipant, nextTurn, prevTurn, onDragStart, onDrop
 } from './modules/battle-core.js';
 import {
-  applyHPDelta, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
+  applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
   openStatusPicker, applyStatus, removeStatus
 } from './modules/hp-status.js';
 import {
@@ -181,7 +181,7 @@ createApp({
       rollInitiative, setCurrentActor, nextTurn, prevTurn, removeParticipant, onDragStart, onDrop,
 
       // HP & status
-      applyHPDelta, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
+      applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
       openStatusPicker, applyStatus, removeStatus,
 
       // Targeting

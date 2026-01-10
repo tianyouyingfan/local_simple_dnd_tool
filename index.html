@@ -175,6 +175,7 @@
                                 <button class="btn small" @click="setCurrentActor(p.uid)">设为当前</button>
                                 <button class="btn small" @click="removeParticipant(p.uid)">移除</button>
                             </div>
+                            <div class="small muted" v-if="p.tempHp > 0" style="color: var(--primary); width: 100%; text-align: right;">剩余虚假生命: {{p.tempHp}}</div>
                         </div>
                     </div>
 
@@ -330,6 +331,9 @@
                                                 style="cursor: pointer;">{{p.name}}</div>
                                             <div class="spacer"></div>
                                             <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
+                                            <transition name="toast-fade">
+                                                <div v-if="p.tempHp > 0" class="hp" style="margin-left: 8px; white-space: nowrap;">虚假生命：{{p.tempHp}}</div>
+                                            </transition>
                                             <div class="small muted" style="min-width: 50px; margin-left: 8px;">AC
                                                 {{p.ac}}</div>
                                             <span class="pill">先攻 {{p.initiative ?? '—'}}</span>
@@ -1398,6 +1402,11 @@
                         @click="applyHPDelta(battle.participants.find(p=>p.uid===ui.hpEditor.targetUid), (ui.hpEditor.delta||0)*2); ui.hpEditor.open=false">双倍</button>
                     <button class="btn ok"
                         @click="applyHPDelta(battle.participants.find(p=>p.uid===ui.hpEditor.targetUid), Math.abs(ui.hpEditor.delta||0)); ui.hpEditor.open=false">治疗</button>
+                    
+                    <div style="width: 1px; background: #eee; height: 32px; margin: 0 8px;"></div>
+                    <input class="input mono" style="width:100px" v-model.number="ui.hpEditor.tempHpInput" placeholder="虚假生命">
+                    <button class="btn"
+                        @click="setTempHp(battle.participants.find(p=>p.uid===ui.hpEditor.targetUid), ui.hpEditor.tempHpInput); ui.hpEditor.open=false">刷新</button>
                 </div>
             </div>
         </div>

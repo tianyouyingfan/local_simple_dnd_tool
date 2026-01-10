@@ -85,6 +85,10 @@ npx live-server --port=8080
 - `actions`: 动作/攻击（索引：id, name, type等）
 - `monsterGroups`: 怪物组合（索引：id, name）
 
+**战斗状态（state.js / localStorage）：**
+- `battle.participants` 的参战单位对象可能包含 `tempHp`（虚假生命），用于扣血时优先消耗
+- 战斗状态会写入 `localStorage['dnd-battle-state']`，因此 `tempHp` 也会随战斗状态持久化
+
 ### 状态管理原则
 
 - **全局状态**：集中在`state.js`，使用Vue的`ref()`和`reactive()`
