@@ -10,183 +10,103 @@ alwaysApply: false
 
 ## 模块职责划分
 
-### constants.js
+### 核心基础模块
 
-**职责：** 只存放常量定义，不包含业务逻辑
+#### constants.js
+**职责：** 只存放常量定义，不包含业务逻辑。
+**包含内容：** 怪物类型、伤害类型、状态目录、CR选项等。
 
-**包含内容：**
-- 怪物类型列表（monsterTypes）
-- 伤害类型列表（damageTypes）
-- 状态类型列表（conditionTypes）
-- 翻译映射（monsterTypeTranslations）
-- CR选项列表（crOptions）
-- 状态目录（statusCatalog）
+#### db.js
+**职责：** 数据库配置、版本管理、种子数据。
+**包含内容：** Dexie实例配置、种子数据函数。
 
-**禁止：**
-- ❌ 导出函数
-- ❌ 导出响应式数据（ref/reactive）
-- ❌ 导入其他业务模块
+#### state.js
+**职责：** 全局响应式状态管理。
+**包含内容：** 全局 ref/reactive 状态 (`monsters`, `battle` 等)。
 
-**示例：**
-```javascript
-// ✅ 正确
-export const monsterTypes = ['aberration', 'beast', ...];
-export const monsterTypeTranslations = {
-    'aberration': '异怪',
-    // ...
-};
+#### utils.js
+**职责：** 纯函数工具。
+**包含内容：** 骰子函数、属性计算、深拷贝等。
 
-// ❌ 错误
-export function getMonsterType() {} // 函数应放在utils.js
-export const monsters = ref([]); // 状态应放在state.js
-```
+#### helpers.js
+**职责：** 通用辅助函数。
+**包含内容：** 验证、文件读取、JSON解析、DOM辅助。
 
-### db.js
+#### data-loader.js
+**职责：** 数据加载与初始化。
+**包含内容：** `loadAll`, `seedDemo`。
 
-**职责：** 数据库配置、版本管理、种子数据
+#### use-toasts.js
+**职责：** Toast 通知系统逻辑。
 
-**包含内容：**
-- Dexie实例配置（db）
-- 数据库版本定义和索引
-- 种子数据函数（seedIfEmpty）
-- 数据库迁移逻辑（如有）
+#### use-computed.js
+**职责：** 集中管理 Vue 计算属性。
 
-**允许依赖：**
-- ✅ 可以导入constants.js（用于种子数据中的常量）
+### 业务逻辑模块
 
-**禁止：**
-- ❌ 导入state.js（避免循环依赖）
-- ❌ 导入main.js
-- ❌ 包含业务逻辑（如战斗计算）
+#### entity-crud.js
+**职责：** 实体（怪物、PC、能力、动作）的增删改查操作。
+**包含内容：** 编辑器打开/关闭、保存、删除逻辑。
 
-**示例：**
-```javascript
-// ✅ 正确
-import Dexie from 'dexie';
-export const db = new Dexie('dnd-assist-v2');
-db.version(3).stores({
-    monsters: '++id, name, cr, isCustom',
-    // ...
-});
+#### monster-groups.js
+**职责：** 怪物组合管理。
+**包含内容：** 组合的创建、编辑、批量应用。
 
-export async function seedIfEmpty() {
-    const count = await db.monsters.count();
-    if (count > 0) return;
-    await db.monsters.bulkAdd([...]);
-}
+#### import-export.js
+**职责：** 数据导入导出。
+**包含内容：** JSON 导出、文件导入处理。
 
-// ❌ 错误
-import { monsters } from 'state'; // 循环依赖
-monsters.value = await db.monsters.toArray(); // 业务逻辑应在main.js
-```
+#### cr-adjustment.js
+**职责：** CR 自动调整逻辑。
 
-### state.js
+### 战斗系统模块
 
-**职责：** 全局响应式状态管理
+#### battle-core.js
+**职责：** 战斗核心流程控制。
+**包含内容：** 参战、先攻、回合流转、移除单位。
 
-**包含内容：**
-- 全局ref/reactive状态（monsters, pcs, actions, battle等）
-- UI状态（route, ui, uiState, monsterFilters）
-- 计算属性（如需要）
+#### action-execution.js
+**职责：** 动作执行引擎。
+**包含内容：** 攻击检定、伤害计算、豁免处理、日志生成。
 
-**允许依赖：**
-- ✅ 可以导入constants.js（用于状态初始化）
-- ✅ 可以导入Vue的响应式API
+#### hp-status.js
+**职责：** HP 与状态管理。
+**包含内容：** 扣血/治疗、状态施加/移除、快速伤害编辑器。
 
-**禁止：**
-- ❌ 导入db.js（数据同步应在main.js中处理）
-- ❌ 导入utils.js（工具函数不应依赖状态）
-- ❌ 包含业务逻辑
+#### targeting.js
+**职责：** 目标选择逻辑。
 
-**示例：**
-```javascript
-// ✅ 正确
-import { reactive, ref, computed } from 'vue';
-export const monsters = ref([]);
-export const battle = reactive({
-    participants: [],
-    currentIndex: 0
-});
+### UI 交互模块
 
-// ❌ 错误
-import { db } from 'db'; // 数据加载应在main.js
-export async function loadMonsters() {
-    monsters.value = await db.monsters.toArray();
-}
-```
+#### image-cropper.js / use-image-cropper.js
+**职责：** 图片裁剪功能。
+**包含内容：** 裁剪器实例管理 (`image-cropper.js`) 和 核心逻辑 Composable (`use-image-cropper.js`)。
 
-### utils.js
+#### actor-viewer.js
+**职责：** 角色查看器逻辑。
 
-**职责：** 纯函数工具，无副作用
+#### quick-dice.js
+**职责：** 快速骰子工具逻辑。
 
-**包含内容：**
-- 骰子相关函数（rollD20, rollDamage, parseDiceExpr）
-- 属性计算（abilityMod）
-- 数据操作（deepClone）
-- 其他纯函数工具
+#### ui-toggles.js
+**职责：** 简单的 UI 状态切换与过滤器逻辑。
 
-**允许依赖：**
-- ✅ 可以导入constants.js（用于常量引用）
+#### keyboard-shortcuts.js
+**职责：** 全局键盘快捷键注册。
 
-**禁止：**
-- ❌ 导入state.js（工具函数应无状态）
-- ❌ 导入db.js（工具函数应无副作用）
-- ❌ 包含副作用操作（DOM操作、数据库操作等）
-
-**示例：**
-```javascript
-// ✅ 正确 - 纯函数
-export function abilityMod(score) {
-    return Math.floor((score - 10) / 2);
-}
-
-export function rollD20(mode = 'normal') {
-    const r1 = Math.floor(Math.random() * 20) + 1;
-    // ...
-    return { value: r1, isCrit: r1 === 20, ... };
-}
-
-// ❌ 错误 - 包含副作用
-export function rollD20AndSave(mode) {
-    const roll = rollD20(mode);
-    await db.rolls.add(roll); // 副作用，应在main.js
-    return roll;
-}
-```
+---
 
 ### main.js
-
-**职责：** 业务逻辑、UI交互、数据同步
-
+**职责：** 应用入口与胶水层。
 **包含内容：**
-- Vue应用创建和配置
-- 所有业务逻辑函数
-- 事件处理函数
-- 数据同步逻辑（数据库 ↔ 状态）
-- 计算属性（业务相关）
-- UI交互逻辑
+- Vue 应用初始化 (`createApp`)
+- 导入并组合所有模块
+- 注册全局 Watchers
+- 模板使用的 Helper 函数暴露
 
-**允许依赖：**
-- ✅ 可以导入所有modules（constants, db, state, utils）
-- ✅ 可以导入Vue API
+**注意：** `main.js` 现在应保持精简，不包含具体业务逻辑。
 
-**示例：**
-```javascript
-// ✅ 正确 - 业务逻辑
-import { db, seedIfEmpty } from 'db';
-import { monsters } from 'state';
-import { rollD20 } from 'utils';
-
-async function loadMonsters() {
-    const data = await db.monsters.toArray();
-    monsters.value = data;
-}
-
-function executeAction(action, targets) {
-    const roll = rollD20('adv');
-    // 业务逻辑...
-}
-```
+---
 
 ## 依赖方向规则
 
@@ -194,116 +114,29 @@ function executeAction(action, targets) {
 
 ```
 main.js
-  ↓ (可以导入所有)
-constants.js ← db.js
-  ↓           ↓
-state.js    utils.js
-  ↑           ↑
-  └───────────┘ (都不应导入main.js)
+  ↓ (导入并组合)
+各业务模块 (battle-core, entity-crud, ...)
+  ↓ (相互借用，但避免循环依赖)
+核心模块 (state, db, utils, helpers)
+  ↓
+constants.js
 ```
 
-**规则：**
-1. ✅ `main.js` 可以导入所有modules
-2. ✅ `db.js` 可以导入 `constants.js`
-3. ✅ `state.js` 可以导入 `constants.js` 和 Vue
-4. ✅ `utils.js` 可以导入 `constants.js`
-5. ❌ **禁止循环依赖**：任何模块不应导入 `main.js`
-6. ❌ **禁止跨层调用**：`constants.js` 不应导入其他业务模块
+1. **High Level**: `main.js` 导入所有模块。
+2. **Mid Level**: 业务模块（如 `battle-core`）可以导入核心模块（`state`, `utils`）。
+3. **Low Level**: 核心模块（`utils`, `helpers`）通常只依赖 `constants.js` 或无依赖。
 
-## 新增模块的步骤
+### 禁止的模式
+- ❌ **循环依赖**：如 `state` 依赖 `battle-core`，而 `battle-core` 又依赖 `state`（注：`state.js` 仅定义数据结构，不应依赖业务逻辑模块）。
+- ❌ **Main 反向依赖**：没有任何模块应该导入 `main.js`。
 
-### 1. 确定模块类型
+## 新增模块建议
 
-**判断新功能应放在哪个模块：**
+1. **功能归类**：判断新功能属于 核心、业务、战斗 还是 UI。
+2. **优先复用**：先检查 `utils.js` 和 `helpers.js`。
+3. **保持单一职责**：如果一个文件变得过大（>300行），考虑继续拆分。
 
-- **常量定义** → `constants.js`
-- **数据库操作/种子数据** → `db.js`
-- **全局状态** → `state.js`
-- **纯函数工具** → `utils.js`
-- **业务逻辑/UI交互** → `main.js`
+## 技术债务状态
 
-### 2. 检查现有功能
-
-**在添加新功能前：**
-1. 搜索现有代码，看是否有类似实现
-2. 检查utils.js是否有可复用的工具函数
-3. 检查constants.js是否有相关常量定义
-
-### 3. 遵循模块边界
-
-**添加新功能时：**
-- 如果需要在多个模块中添加，按依赖方向顺序添加
-- 避免在低层模块（如utils.js）中导入高层模块（如state.js）
-- 保持模块职责单一
-
-### 4. 示例：添加新的伤害类型
-
-**步骤：**
-1. 在 `constants.js` 中添加新伤害类型：
-   ```javascript
-   export const damageTypes = ref([..., '新伤害类型']);
-   ```
-2. 在 `main.js` 中使用新类型（无需修改其他模块）
-
-### 5. 示例：添加新的工具函数
-
-**步骤：**
-1. 在 `utils.js` 中添加纯函数：
-   ```javascript
-   export function newUtilityFunction(param) {
-       // 纯函数逻辑
-       return result;
-   }
-   ```
-2. 在 `main.js` 中导入并使用：
-   ```javascript
-   import { newUtilityFunction } from 'utils';
-   ```
-
-## 禁止的架构模式
-
-### ❌ 禁止循环依赖
-
-```javascript
-// ❌ 错误示例
-// state.js
-import { loadData } from 'db';
-// db.js
-import { updateState } from 'state';
-```
-
-### ❌ 禁止在工具函数中包含副作用
-
-```javascript
-// ❌ 错误 - utils.js中
-export function calculateDamage(dice) {
-    const damage = rollDamage(dice);
-    await db.damageLog.add(damage); // 副作用，应在main.js
-    return damage;
-}
-```
-
-### ❌ 禁止在constants中定义函数
-
-```javascript
-// ❌ 错误 - constants.js中
-export function getMonsterTypeTranslation(type) {
-    return monsterTypeTranslations[type] || type;
-}
-// 应放在utils.js
-```
-
-## 重构建议
-
-**当前架构问题：**
-- `main.js` 文件过大（1860行），计划未来按功能拆分：
-  - 战斗相关函数 → `js/modules/battle.js`
-  - 编辑器相关函数 → `js/modules/editors.js`
-  - UI交互函数 → `js/modules/ui.js`
-- `index.html` 文件过大（1870行），计划未来拆分组件
-
-**重构原则：**
-- 保持模块边界清晰
-- 新模块遵循相同的依赖方向规则
-- 逐步重构，不要一次性大改
-- **注意**：重构计划未来进行，目前不着急，保持现有结构即可
+- ✅ `main.js` 已完成模块化重构（2025-01）。
+- ⏳ `index.html` 仍较大，未来可考虑组件化拆分。

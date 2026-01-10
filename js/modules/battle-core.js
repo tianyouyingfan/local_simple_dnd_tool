@@ -1,0 +1,202 @@
+/**
+ * 战斗核心逻辑模块
+ */
+import { nextTick } from 'vue';
+import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from './state.js';
+import { deepClone, rollSingleInitiative } from './utils.js';
+import { sortParticipantsByInitiative } from './helpers.js';
+import { useToasts } from './use-toasts.js';
+
+const { toast } = useToasts();
+
+export function standardizeToParticipant(x) {
+    const uid = crypto.randomUUID();
+    const isPc = !!x.hpMax;
+    return {
+        uid,
+        baseId: x.id || null,
+        name: x.name,
+        type: isPc ? 'pc' : 'monster',
+        avatar: x.avatar || (x.type?.includes?.('dragon') ? '🐲' : (isPc ? '🧝' : '👾')),
+        ac: x.ac || 12,
+        hpMax: x.hpMax || x.hp?.average || 10,
+        hpCurrent: x.hpCurrent || x.hp?.average || 10,
+        abilities: x.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+        resistances: deepClone(x.resistances || { damage: [], conditions: [] }),
+        vulnerabilities: deepClone(x.vulnerabilities || { damage: [], conditions: [] }),
+        immunities: deepClone(x.immunities || { damage: [], conditions: [] }),
+        actions: deepClone(x.actions || []).map(a => ({ ...a, cooldown: 0 })),
+        statuses: [],
+        initiative: null,
+        cr: x.cr,
+        speed: x.speed,
+        monsterType: x.type,
+        features: x.features,
+        backgroundImage: x.backgroundImage,
+    };
+}
+
+export function addParticipantAndProcessInitiative(participant) {
+    const inProgress = battle.participants.length > 0 && battle.participants[0].initiative !== null;
+
+    if (!inProgress) {
+        battle.participants.push(participant);
+        return;
+    }
+
+    const init = rollSingleInitiative(participant);
+    Object.assign(participant, init);
+    participant.justJoined = true;
+
+    battle.participants.push(participant);
+    sortParticipantsByInitiative(battle.participants);
+
+    // 防止排序后 currentIndex 高亮错乱
+    if (currentActor.value) {
+        const newIdx = battle.participants.findIndex(p => p.uid === currentActor.value.uid);
+        if (newIdx !== -1) battle.currentIndex = newIdx;
+    }
+}
+
+export function addToBattleFromEditor(entity, type) {
+    const p = standardizeToParticipant(entity);
+    addParticipantAndProcessInitiative(p);
+    if (type === 'monster') ui.monsterEditor.open = false;
+    else if (type === 'pc') ui.pcEditor.open = false;
+    route.value = 'battle';
+    toast(`${p.name} 已加入战斗`);
+}
+
+export function addToBattleFromMonster(m) {
+    addParticipantAndProcessInitiative(standardizeToParticipant(m));
+    route.value = 'battle';
+    toast('已加入战斗');
+}
+
+export function addToBattleFromPC(pc) {
+    addParticipantAndProcessInitiative(standardizeToParticipant(pc));
+    route.value = 'battle';
+    toast('已加入战斗');
+}
+
+export function promptAddParticipants() { ui.addParticipants.open = true; }
+
+export function addParticipantsFromMonster(m, count = 1) {
+    for (let i = 0; i < count; i++) {
+        const p = standardizeToParticipant(m);
+        if (count > 1) p.name = `${m.name} #${i + 1}`;
+        addParticipantAndProcessInitiative(p);
+    }
+    toast('怪物已加入');
+}
+
+export function addParticipantsFromPC(pc) {
+    addParticipantAndProcessInitiative(standardizeToParticipant(pc));
+    toast('PC已加入');
+}
+
+export async function resetBattle() {
+    if (!confirm('确定要初始化战斗吗？当前战场将被清空，并自动载入所有默认参战单位。')) return;
+    battle.participants = [];
+    battle.round = 1;
+    battle.currentIndex = 0;
+    localStorage.removeItem('dnd-battle-state');
+    ui.log = '战斗已初始化。';
+
+    monsters.value.filter(m => m.isDefault).forEach(m => battle.participants.push(standardizeToParticipant(m)));
+    pcs.value.filter(pc => pc.isDefault).forEach(pc => battle.participants.push(standardizeToParticipant(pc)));
+
+    toast(`初始化完成，已自动加入 ${battle.participants.length} 个默认单位。`);
+}
+
+export function rollInitiative() {
+    for (const p of battle.participants) {
+        Object.assign(p, rollSingleInitiative(p));
+        delete p.justJoined;
+    }
+    sortParticipantsByInitiative(battle.participants);
+    battle.currentIndex = 0;
+    battle.round = 1;
+    toast('已掷先攻并排序');
+}
+
+export function setCurrentActor(uid) {
+    const idx = battle.participants.findIndex(p => p.uid === uid);
+    if (idx >= 0) battle.currentIndex = idx;
+}
+
+export function decrementParticipantStatuses(participant) {
+    participant.statuses = participant.statuses
+        .map(s => ({ ...s, rounds: s.rounds - 1 }))
+        .filter(s => s.rounds > 0);
+}
+
+export function decrementActionCooldowns(participant) {
+    participant.actions?.forEach(a => { if (a.cooldown > 0) a.cooldown--; });
+}
+
+export function removeParticipant(uid) {
+    const i = battle.participants.findIndex(p => p.uid === uid);
+    if (i < 0) return;
+    battle.participants.splice(i, 1);
+    if (battle.currentIndex >= battle.participants.length) battle.currentIndex = 0;
+}
+
+export function nextTurn() {
+    if (!battle.participants.length) return;
+
+    const actor = currentActor.value;
+    if (actor?.justJoined) {
+        delete actor.justJoined;
+        toast(`【${actor.name}】在本轮加入，其首个回合将被跳过。`);
+
+        battle.currentIndex++;
+        if (battle.currentIndex >= battle.participants.length) {
+            battle.currentIndex = 0;
+            battle.round++;
+        }
+        if (currentActor.value) {
+            decrementParticipantStatuses(currentActor.value);
+            decrementActionCooldowns(currentActor.value);
+        }
+        return;
+    }
+
+    const active = currentActor.value;
+    let removed = false;
+    if (active && active.hpCurrent <= 0 && active.type === 'monster') {
+        const deadName = active.name;
+        removeParticipant(active.uid);
+        toast(`怪物【${deadName}】已在回合结束后移除。`);
+        removed = true;
+    }
+    if (!removed) battle.currentIndex++;
+
+    if (battle.currentIndex >= battle.participants.length) {
+        battle.currentIndex = 0;
+        battle.round++;
+    }
+    if (currentActor.value) {
+        decrementParticipantStatuses(currentActor.value);
+        decrementActionCooldowns(currentActor.value);
+    }
+}
+
+export function prevTurn() {
+    if (!battle.participants.length) return;
+    battle.currentIndex--;
+    if (battle.currentIndex < 0) {
+        battle.currentIndex = battle.participants.length - 1;
+        battle.round = Math.max(1, battle.round - 1);
+    }
+}
+
+export function onDragStart(idx) { battle.dragIndex = idx; }
+
+export function onDrop(idx) {
+    const from = battle.dragIndex;
+    if (from == null) return;
+    const item = battle.participants.splice(from, 1)[0];
+    battle.participants.splice(idx, 0, item);
+    battle.dragIndex = null;
+}

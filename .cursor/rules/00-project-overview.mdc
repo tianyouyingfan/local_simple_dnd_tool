@@ -26,21 +26,24 @@ alwaysApply: true
 
 ```
 重构版D&D_Tool/
-├── index.html              # 主入口HTML（1870行，包含所有Vue模板）
+├── index.html              # 主入口HTML（包含所有Vue模板）
 ├── style.css               # 全局样式文件
 ├── manifest.json           # PWA配置文件
 ├── sw.js                   # Service Worker（缓存策略）
 ├── package.json            # npm配置（ESLint依赖）
 ├── .eslintrc.js            # ESLint配置
 ├── js/
-│   ├── main.js             # Vue应用主逻辑（1860行，包含所有业务逻辑）
+│   ├── main.js             # Vue应用入口（已轻量化，负责胶水逻辑）
 │   ├── modules/
-│   │   ├── constants.js    # 常量定义（怪物类型、伤害类型、状态目录等）
-│   │   ├── db.js           # Dexie数据库配置、版本管理、种子数据
-│   │   ├── state.js        # 全局响应式状态（monsters, pcs, actions, battle等）
-│   │   └── utils.js        # 工具函数（骰子、伤害计算、属性调整值等）
+│   │   ├── battle-core.js  # 战斗核心逻辑
+│   │   ├── entity-crud.js  # 实体管理逻辑
+│   │   ├── ...             # 其他 18+ 个功能模块
+│   │   ├── constants.js    # 常量定义
+│   │   ├── db.js           # 数据库配置
+│   │   ├── state.js        # 全局响应式状态
+│   │   └── utils.js        # 基础工具函数
 │   └── vendor/
-│       ├── dexie.js        # Dexie库（IndexedDB封装）
+│       ├── dexie.js        # Dexie库
 │       └── vue.js          # Vue 3库
 └── icon-*.png              # PWA图标资源
 ```
@@ -71,11 +74,7 @@ npx live-server --port=8080
 2. **优先复用现有工具**：使用`utils.js`中的工具函数（如`rollD20`, `rollDamage`, `abilityMod`）
 3. **避免重复造轮子**：检查`state.js`中是否已有相关状态管理
 4. **遵循模块边界**：
-   - `constants.js`：只存放常量定义
-   - `db.js`：只处理数据库操作和种子数据
-   - `state.js`：只管理全局响应式状态
-   - `utils.js`：只包含纯函数工具
-   - `main.js`：业务逻辑和UI交互
+   - 见 `.cursor/rules/20-architecture-and-boundaries.mdc` 的详细说明
 
 ### 数据模型
 
@@ -91,12 +90,6 @@ npx live-server --port=8080
 - **全局状态**：集中在`state.js`，使用Vue的`ref()`和`reactive()`
 - **组件状态**：在`main.js`的setup函数中定义
 - **数据同步**：使用`watch`监听数据库变化，自动同步到状态
-
-### 代码组织原则
-
-- **单文件应用**：当前`main.js`和`index.html`都很大，这是项目现状
-- **模块化导入**：使用ES6模块，通过`import`从`modules/`导入
-- **无构建步骤**：直接使用ES6模块，浏览器原生支持
 
 ## 常用命令
 
@@ -121,7 +114,6 @@ db.pcs.toArray()
 
 ## 已知技术债务
 
-- `main.js`文件过大（1860行），计划未来按功能模块拆分（目前不着急）
-- `index.html`文件过大（1870行），计划未来拆分组件（目前不着急）
+- `index.html`文件过大，计划未来拆分组件（目前不着急）
 - 无单元测试和集成测试（不计划添加）
 - 无TypeScript类型检查（不考虑迁移）
