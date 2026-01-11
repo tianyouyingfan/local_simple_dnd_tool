@@ -1,5 +1,4 @@
-import { createApp, ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
-import { db } from 'db';
+import { createApp, watch, nextTick } from 'vue';
 import * as utils from 'utils';
 import {
   route, monsters, abilities, pcs, actions, monsterGroups, monsterFilters,
@@ -19,7 +18,6 @@ import {
 } from './modules/ui-toggles.js';
 import {
   cropperCanvas, cropperModal, avatarCropperCanvas, avatarCropperModal,
-  bgCropper, avatarCropper, // 暴露 cropper 实例以便调用其方法
   onBgImageSelect, initCropper, initCropperWithRetry, drawCropper, startBgDrag, bgDrag, endBgDrag, confirmCrop,
   onAvatarImageSelect, initAvatarCropper, initAvatarCropperWithRetry, drawAvatarCropper, startAvatarDrag, avatarDrag, endAvatarDrag, confirmAvatarCrop
 } from './modules/image-cropper.js';

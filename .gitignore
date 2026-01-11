@@ -1,0 +1,45 @@
+# dependencies
+/node_modules/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# caches / runtime artifacts
+.eslintcache
+/.cache/
+/.tmp/
+/temp/
+
+# common build outputs (even if you don't use a bundler now)
+/dist/
+/build/
+/coverage/
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.vscode/
+.trae/
+.cursor/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+IFLOW.md
