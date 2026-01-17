@@ -203,6 +203,66 @@ http-server
 - **模块化架构**：ES Modules + importmap（项目内模块统一使用裸导入）
 - **离线支持**：Service Worker（预缓存入口与所有模块文件）
 
+## 目录结构
+
+（已排除 `.gitignore` 中忽略的文件/目录）
+
+```text
+.
+├── js/
+│   ├── main.js
+│   ├── modules/
+│   │   ├── app/
+│   │   │   └── keyboard-shortcuts.js
+│   │   ├── composables/
+│   │   │   ├── use-computed.js
+│   │   │   ├── use-image-cropper.js
+│   │   │   └── use-toasts.js
+│   │   ├── domain/
+│   │   │   ├── battle/
+│   │   │   │   ├── action-execution.js
+│   │   │   │   ├── battle-core.js
+│   │   │   │   ├── hp-status.js
+│   │   │   │   ├── quick-dice.js
+│   │   │   │   └── targeting.js
+│   │   │   ├── entities/
+│   │   │   │   ├── actor-viewer.js
+│   │   │   │   ├── cr-adjustment.js
+│   │   │   │   ├── entity-crud.js
+│   │   │   │   └── ui-toggles.js
+│   │   │   └── groups/
+│   │   │       └── monster-groups.js
+│   │   ├── infra/
+│   │   │   └── persistence/
+│   │   │       ├── data-loader.js
+│   │   │       ├── db.js
+│   │   │       └── import-export.js
+│   │   ├── media/
+│   │   │   └── image-cropper.js
+│   │   ├── shared/
+│   │   │   ├── helpers.js
+│   │   │   └── utils.js
+│   │   └── state/
+│   │       ├── constants.js
+│   │       └── state.js
+│   └── vendor/
+│       ├── dexie.js
+│       └── vue.js
+├── .eslintrc.js
+├── .gitignore
+├── LICENSE.txt
+├── README.md
+├── icon-192.png
+├── icon-512.png
+├── icon.ico
+├── index.html
+├── manifest.json
+├── package-lock.json
+├── package.json
+├── style.css
+└── sw.js
+```
+
 ## 代码结构（modules 分层）
 
 `js/modules/` 采用“外层按职责、内层按功能”的分层：
