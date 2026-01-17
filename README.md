@@ -209,58 +209,58 @@ http-server
 
 ```text
 .
-├── js/
-│   ├── main.js
-│   ├── modules/
-│   │   ├── app/
-│   │   │   └── keyboard-shortcuts.js
-│   │   ├── composables/
-│   │   │   ├── use-computed.js
-│   │   │   ├── use-image-cropper.js
-│   │   │   └── use-toasts.js
-│   │   ├── domain/
-│   │   │   ├── battle/
-│   │   │   │   ├── action-execution.js
-│   │   │   │   ├── battle-core.js
-│   │   │   │   ├── hp-status.js
-│   │   │   │   ├── quick-dice.js
-│   │   │   │   └── targeting.js
-│   │   │   ├── entities/
-│   │   │   │   ├── actor-viewer.js
-│   │   │   │   ├── cr-adjustment.js
-│   │   │   │   ├── entity-crud.js
-│   │   │   │   └── ui-toggles.js
-│   │   │   └── groups/
-│   │   │       └── monster-groups.js
-│   │   ├── infra/
-│   │   │   └── persistence/
-│   │   │       ├── data-loader.js
-│   │   │       ├── db.js
-│   │   │       └── import-export.js
-│   │   ├── media/
-│   │   │   └── image-cropper.js
-│   │   ├── shared/
-│   │   │   ├── helpers.js
-│   │   │   └── utils.js
-│   │   └── state/
-│   │       ├── constants.js
-│   │       └── state.js
-│   └── vendor/
-│       ├── dexie.js
-│       └── vue.js
-├── .eslintrc.js
-├── .gitignore
-├── LICENSE.txt
-├── README.md
-├── icon-192.png
-├── icon-512.png
-├── icon.ico
-├── index.html
-├── manifest.json
-├── package-lock.json
-├── package.json
-├── style.css
-└── sw.js
+├── js/                                   # 前端源码（浏览器原生 ES Modules）
+│   ├── main.js                           # Vue 应用入口/装配层（初始化、watch 持久化、模板事件绑定）
+│   ├── modules/                          # 业务与基础设施模块（按职责分层：domain/infra/state/shared...）
+│   │   ├── app/                          # 应用级编排（跨页面/跨域的装配逻辑）
+│   │   │   └── keyboard-shortcuts.js     # 全局快捷键（投骰、回合切换、编辑器保存/取消等）
+│   │   ├── composables/                  # 可复用组合式逻辑（use-*）
+│   │   │   ├── use-computed.js           # 计算属性集合（列表过滤、参战单位分组、动作排序等）
+│   │   │   ├── use-image-cropper.js      # 通用裁剪 Composable（矩形/圆形、拖拽裁剪、输出 dataURL）
+│   │   │   └── use-toasts.js             # Toast 通知 Composable（写入 ui.toasts 并自动消失）
+│   │   ├── domain/                       # 核心业务域逻辑
+│   │   │   ├── battle/                   # 战斗域：回合、动作结算、HP/状态、目标、投骰
+│   │   │   │   ├── action-execution.js   # 动作结算：命中/伤害/豁免、通知队列、自动扣血等
+│   │   │   │   ├── battle-core.js        # 战斗核心：参战单位标准化、加入/先攻排序、回合推进、拖拽顺序
+│   │   │   │   ├── hp-status.js          # HP/状态：扣血/治疗/虚假生命、状态增删、快捷扣血弹窗
+│   │   │   │   ├── quick-dice.js         # 快捷投骰：解析骰子表达式并展示结果
+│   │   │   │   └── targeting.js          # 目标选择：单体/分组选择与清空选择
+│   │   │   ├── entities/                 # 实体域：怪物/PC/动作/能力等
+│   │   │   │   ├── actor-viewer.js       # 单位查看/临时编辑面板，并与动作选择联动
+│   │   │   │   ├── cr-adjustment.js      # CR 调整入口（调用 utils.adjustMonsterToCR 的占位算法）
+│   │   │   │   ├── entity-crud.js        # 怪物/PC/能力/动作的 CRUD 与编辑器保存逻辑
+│   │   │   │   └── ui-toggles.js         # UI 开关与过滤器：类型筛选、抗性/免疫数组切换等
+│   │   │   └── groups/                   # 遭遇组/怪物组合域
+│   │   │       └── monster-groups.js     # 怪物组合 CRUD + 一键按数量加入战斗
+│   │   ├── infra/                        # 基础设施层（与业务规则解耦）
+│   │   │   └── persistence/              # 数据持久化与数据进出（IndexedDB/Dexie）
+│   │   │       ├── data-loader.js        # 从 IndexedDB 加载到响应式 state，并提供演示数据载入
+│   │   │       ├── db.js                 # Dexie 数据库定义/表结构 + 初始种子数据 seedIfEmpty
+│   │   │       └── import-export.js      # 数据导入/导出（JSON 备份/恢复，导入会清空再写入）
+│   │   ├── media/                        # 媒体处理实现
+│   │   │   └── image-cropper.js          # 裁剪器实例：把 useImageCropper 绑定到 UI state 与草稿字段
+│   │   ├── shared/                       # 纯工具与通用 helpers（跨域复用）
+│   │   │   ├── helpers.js                # 通用 helper：安全解析、图片校验/读取、先攻排序、动作字段兼容等
+│   │   │   └── utils.js                  # 通用工具：掷骰/伤害、能力调整值、CR 占位调整、排序等
+│   │   └── state/                        # 全局状态与常量
+│   │       ├── constants.js              # 常量集合（怪物类型/伤害类型/状态等）
+│   │       └── state.js                  # 全局响应式状态、UI 状态、草稿模型与默认对象工厂
+│   └── vendor/                           # 第三方库（本地 vendored，不走打包器）
+│       ├── dexie.js                      # Dexie（IndexedDB 封装库）
+│       └── vue.js                        # Vue 3（运行时）
+├── .eslintrc.js                           # ESLint 规则配置（代码风格与质量约束）
+├── .gitignore                             # Git 忽略规则（node_modules、IDE 配置、缓存等）
+├── LICENSE.txt                            # 项目许可证（MIT License）
+├── README.md                              # 项目说明文档
+├── icon-192.png                           # PWA/快捷方式图标（192x192）
+├── icon-512.png                           # PWA/快捷方式图标（512x512）
+├── icon.ico                               # 站点 favicon
+├── index.html                             # 单页入口：Vue 模板 + importmap + 加载 main.js + 注册 SW
+├── manifest.json                          # PWA 清单（名称、主题色、图标、启动方式）
+├── package-lock.json                      # npm 依赖锁定文件（锁定 ESLint 等开发依赖版本）
+├── package.json                           # npm 配置（lint 脚本与 ESLint 开发依赖）
+├── style.css                              # 全局样式（应用布局与组件样式）
+└── sw.js                                  # Service Worker：预缓存静态资源与模块，实现离线访问
 ```
 
 ## 代码结构（modules 分层）
