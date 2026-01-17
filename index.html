@@ -1859,10 +1859,37 @@
   "imports": {
     "vue": "./js/vendor/vue.js",
     "dexie": "./js/vendor/dexie.js",
-    "db": "./js/modules/db.js",
-    "utils": "./js/modules/utils.js",
-    "state": "./js/modules/state.js",
-    "constants": "./js/modules/constants.js"
+
+    "utils": "./js/modules/shared/utils.js",
+    "helpers": "./js/modules/shared/helpers.js",
+
+    "state": "./js/modules/state/state.js",
+    "constants": "./js/modules/state/constants.js",
+
+    "db": "./js/modules/infra/persistence/db.js",
+    "data-loader": "./js/modules/infra/persistence/data-loader.js",
+    "import-export": "./js/modules/infra/persistence/import-export.js",
+
+    "battle-core": "./js/modules/domain/battle/battle-core.js",
+    "action-execution": "./js/modules/domain/battle/action-execution.js",
+    "hp-status": "./js/modules/domain/battle/hp-status.js",
+    "targeting": "./js/modules/domain/battle/targeting.js",
+    "quick-dice": "./js/modules/domain/battle/quick-dice.js",
+
+    "entity-crud": "./js/modules/domain/entities/entity-crud.js",
+    "actor-viewer": "./js/modules/domain/entities/actor-viewer.js",
+    "cr-adjustment": "./js/modules/domain/entities/cr-adjustment.js",
+    "ui-toggles": "./js/modules/domain/entities/ui-toggles.js",
+
+    "monster-groups": "./js/modules/domain/groups/monster-groups.js",
+
+    "keyboard-shortcuts": "./js/modules/app/keyboard-shortcuts.js",
+
+    "use-toasts": "./js/modules/composables/use-toasts.js",
+    "use-computed": "./js/modules/composables/use-computed.js",
+    "use-image-cropper": "./js/modules/composables/use-image-cropper.js",
+
+    "image-cropper": "./js/modules/media/image-cropper.js"
   }
 }
 </script>
@@ -1888,3 +1915,4 @@
 </body>
 
 </html>
+

@@ -1,10 +1,10 @@
 /**
  * 数据加载与初始化模块
  */
-import { db, seedIfEmpty } from './db.js';
+import { db, seedIfEmpty } from 'db';
 export { seedIfEmpty };
-import { monsters, abilities, pcs, actions, monsterGroups } from './state.js';
-import { useToasts } from './use-toasts.js';
+import { monsters, abilities, pcs, actions, monsterGroups } from 'state';
+import { useToasts } from 'use-toasts';
 
 export async function loadAll() {
     monsters.value = await db.monsters.toArray();
@@ -20,3 +20,4 @@ export async function seedDemo() {
     await loadAll();
     toast('已载入演示数据');
 }
+

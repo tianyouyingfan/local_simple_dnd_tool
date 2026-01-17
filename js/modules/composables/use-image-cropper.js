@@ -2,8 +2,8 @@
  * 图片裁剪 Composable
  */
 import { ref, reactive, watch, nextTick } from 'vue';
-import { debugLog, validateImageFile, readFileAsDataURL } from './helpers.js';
-import { clamp } from './utils.js';
+import { debugLog, validateImageFile, readFileAsDataURL } from 'helpers';
+import { clamp } from 'utils';
 
 export function useImageCropper({
     // refs (passed from outside)
@@ -302,3 +302,4 @@ export function useImageCropper({
         reset,
     };
 }
+

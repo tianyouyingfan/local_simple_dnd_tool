@@ -2,9 +2,9 @@
  * HP 与 状态管理模块
  */
 import { nextTick } from 'vue';
-import { battle, ui, statusCatalog, quickDamageInput } from './state.js';
-import { clamp } from './utils.js';
-import { useToasts } from './use-toasts.js';
+import { battle, ui, statusCatalog, quickDamageInput } from 'state';
+import { clamp } from 'utils';
+import { useToasts } from 'use-toasts';
 
 const { toast } = useToasts();
 
@@ -93,3 +93,4 @@ export function applyStatus() {
 export function removeStatus(target, statusId) {
     target.statuses = target.statuses.filter(s => s.id !== statusId);
 }
+

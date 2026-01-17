@@ -1,7 +1,7 @@
 /**
  * UI 切换与过滤器控制模块
  */
-import { monsterFilters, uiState, ui } from './state.js';
+import { monsterFilters, uiState, ui } from 'state';
 
 export function toggleTypeFilter(t) {
     const idx = monsterFilters.types.indexOf(t);
@@ -33,3 +33,4 @@ export function toggleConditionImmunity(condition) {
     if (i > -1) arr.splice(i, 1);
     else arr.push(condition);
 }
+

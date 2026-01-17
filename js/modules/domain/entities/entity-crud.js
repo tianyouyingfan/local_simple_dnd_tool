@@ -1,13 +1,13 @@
 /**
  * 实体 CRUD 操作模块 (Monster, PC, Ability, Action)
  */
-import { db } from './db.js';
-import { ui, uiState, emptyMonster, actions, abilities, pcs } from './state.js';
-import { deepClone } from './utils.js';
-import { ensureActionDamages } from './helpers.js';
-import { loadAll } from './data-loader.js';
-import { useToasts } from './use-toasts.js';
-import { openActionsViewer } from './actor-viewer.js';
+import { db } from 'db';
+import { ui, uiState, emptyMonster, actions, abilities, pcs } from 'state';
+import { deepClone } from 'utils';
+import { ensureActionDamages } from 'helpers';
+import { loadAll } from 'data-loader';
+import { useToasts } from 'use-toasts';
+import { openActionsViewer } from 'actor-viewer';
 
 const { toast } = useToasts();
 
@@ -233,3 +233,4 @@ export async function deleteAction(id) {
     actions.value = await db.actions.toArray();
     toast('已删除');
 }
+

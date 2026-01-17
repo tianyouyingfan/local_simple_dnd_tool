@@ -2,12 +2,12 @@
  * 键盘快捷键模块
  */
 import { onBeforeUnmount } from 'vue';
-import { isTypingInInput } from './helpers.js';
-import { openQuickDice } from './quick-dice.js';
-import { nextTurn, prevTurn } from './battle-core.js';
-import { ui, uiState } from './state.js';
-import { cancelActorViewerEdit, saveActorViewerChanges } from './actor-viewer.js';
-import { saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from './entity-crud.js';
+import { isTypingInInput } from 'helpers';
+import { openQuickDice } from 'quick-dice';
+import { nextTurn, prevTurn } from 'battle-core';
+import { ui, uiState } from 'state';
+import { cancelActorViewerEdit, saveActorViewerChanges } from 'actor-viewer';
+import { saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
 
 export function setupKeyboardShortcuts() {
     let lastD = 0, lastR = 0, lastL = 0;
@@ -129,3 +129,4 @@ export function setupKeyboardShortcuts() {
     window.addEventListener('keydown', onKeyDown);
     onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown));
 }
+

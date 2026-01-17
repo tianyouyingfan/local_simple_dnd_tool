@@ -1,10 +1,10 @@
 /**
  * 数据导入导出模块
  */
-import { db } from './db.js';
-import { safeJsonParse } from './helpers.js';
-import { loadAll } from './data-loader.js';
-import { useToasts } from './use-toasts.js';
+import { db } from 'db';
+import { safeJsonParse } from 'helpers';
+import { loadAll } from 'data-loader';
+import { useToasts } from 'use-toasts';
 
 const { toast } = useToasts();
 
@@ -54,3 +54,4 @@ export async function importAll(e) {
         e.target.value = '';
     }
 }
+

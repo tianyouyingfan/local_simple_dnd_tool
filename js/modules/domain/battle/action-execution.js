@@ -2,11 +2,11 @@
  * 动作执行核心模块
  */
 import { nextTick } from 'vue';
-import { battle, ui, uiState, currentActor, statusCatalog } from './state.js'; // 导入 currentActor
-import { deepClone, rollD20, rollDamage, rollDamageWithDetails, clamp } from './utils.js';
-import { useToasts } from './use-toasts.js';
-import { applyHPDelta } from './hp-status.js';
-import { selectNone } from './targeting.js';
+import { battle, ui, uiState, currentActor, statusCatalog } from 'state'; // 导入 currentActor
+import { deepClone, rollD20, rollDamage, rollDamageWithDetails, clamp } from 'utils';
+import { useToasts } from 'use-toasts';
+import { applyHPDelta } from 'hp-status';
+import { selectNone } from 'targeting';
 
 const { toast } = useToasts();
 
@@ -262,3 +262,4 @@ export function applySaveOutcomes() {
     ui.saveOutcomePicker.open = false;
     selectNone();
 }
+

@@ -2,8 +2,8 @@
  * 计算属性集合模块
  */
 import { computed } from 'vue';
-import { ui, monsters, monsterFilters, abilities, actions, battle, uiState, currentActor } from './state.js';
-import { sortActionsByType } from './utils.js';
+import { ui, monsters, monsterFilters, abilities, actions, battle, uiState, currentActor } from 'state';
+import { sortActionsByType } from 'utils';
 
 export function useComputed() {
     const filteredMonsters = computed(() => {
@@ -68,3 +68,4 @@ export function useComputed() {
         sortedPcDraftActions
     };
 }
+

@@ -1,35 +1,46 @@
-// 1. 更改缓存名称！这是强制浏览器更新缓存的信号。
-const CACHE_NAME = 'dnd-assist-v0.5.0-modular';
+const CACHE_NAME = 'dnd-assist-v0.5.1-modular-structure';
 
-// 2. 更新需要缓存的文件列表
 const urlsToCache = [
   '/',
   'index.html',
   'style.css',
-  'manifest.json', // 明确缓存manifest
+  'manifest.json',
   'icon-192.png',
   'icon-512.png',
-  'js/main.js', // 主入口
-  'js/modules/db.js',
-  'js/modules/utils.js',
-  'js/modules/state.js',
-  'js/modules/constants.js',
+  'js/main.js',
   'js/vendor/vue.js',
-  'js/vendor/dexie.js'
+  'js/vendor/dexie.js',
+  'js/modules/app/keyboard-shortcuts.js',
+  'js/modules/composables/use-computed.js',
+  'js/modules/composables/use-image-cropper.js',
+  'js/modules/composables/use-toasts.js',
+  'js/modules/domain/battle/action-execution.js',
+  'js/modules/domain/battle/battle-core.js',
+  'js/modules/domain/battle/hp-status.js',
+  'js/modules/domain/battle/quick-dice.js',
+  'js/modules/domain/battle/targeting.js',
+  'js/modules/domain/entities/actor-viewer.js',
+  'js/modules/domain/entities/cr-adjustment.js',
+  'js/modules/domain/entities/entity-crud.js',
+  'js/modules/domain/entities/ui-toggles.js',
+  'js/modules/domain/groups/monster-groups.js',
+  'js/modules/infra/persistence/data-loader.js',
+  'js/modules/infra/persistence/db.js',
+  'js/modules/infra/persistence/import-export.js',
+  'js/modules/media/image-cropper.js',
+  'js/modules/shared/helpers.js',
+  'js/modules/shared/utils.js',
+  'js/modules/state/constants.js',
+  'js/modules/state/state.js'
 ];
 
-// 安装和缓存逻辑 (保持不变)
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// 激活时清理旧缓存 (新增一个好习惯，自动清理老版本缓存)
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -40,13 +51,9 @@ self.addEventListener('activate', event => {
   );
 });
 
-
-// 拦截网络请求逻辑 (保持不变)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
+      .then(response => response || fetch(event.request))
   );
 });

@@ -1,7 +1,7 @@
 /**
  * Toast 通知功能 Composable
  */
-import { ui } from './state.js';
+import { ui } from 'state';
 
 export function useToasts() {
     function removeToast(id) {
@@ -17,3 +17,4 @@ export function useToasts() {
 
     return { toast, removeToast };
 }
+

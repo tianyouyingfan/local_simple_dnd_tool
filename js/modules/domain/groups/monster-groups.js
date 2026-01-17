@@ -1,12 +1,12 @@
 /**
  * 怪物组合管理模块
  */
-import { db } from './db.js';
-import { ui, uiState, monsters } from './state.js';
-import { deepClone } from './utils.js';
-import { loadAll } from './data-loader.js';
-import { useToasts } from './use-toasts.js';
-import { standardizeToParticipant, addParticipantAndProcessInitiative } from './battle-core.js';
+import { db } from 'db';
+import { ui, uiState, monsters } from 'state';
+import { deepClone } from 'utils';
+import { loadAll } from 'data-loader';
+import { useToasts } from 'use-toasts';
+import { standardizeToParticipant, addParticipantAndProcessInitiative } from 'battle-core';
 
 const { toast } = useToasts();
 
@@ -58,3 +58,4 @@ export function addParticipantsFromGroup(group) {
     }
     toast(`已从组合 [${group.name}] 添加 ${added} 个怪物`);
 }
+

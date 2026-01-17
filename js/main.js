@@ -10,55 +10,55 @@ import {
 } from 'constants';
 
 // 导入新模块
-import { safeJsonParse } from './modules/helpers.js';
-import { useToasts } from './modules/use-toasts.js';
-import { loadAll, seedDemo, seedIfEmpty } from './modules/data-loader.js';
+import { safeJsonParse } from 'helpers';
+import { useToasts } from 'use-toasts';
+import { loadAll, seedDemo, seedIfEmpty } from 'data-loader';
 import {
   toggleTypeFilter, toggleMonsterDraftType, toggleDamageModifier, toggleConditionImmunity
-} from './modules/ui-toggles.js';
+} from 'ui-toggles';
 import {
   cropperCanvas, cropperModal, avatarCropperCanvas, avatarCropperModal,
   onBgImageSelect, initCropper, initCropperWithRetry, drawCropper, startBgDrag, bgDrag, endBgDrag, confirmCrop,
   onAvatarImageSelect, initAvatarCropper, initAvatarCropperWithRetry, drawAvatarCropper, startAvatarDrag, avatarDrag, endAvatarDrag, confirmAvatarCrop
-} from './modules/image-cropper.js';
+} from 'image-cropper';
 import {
   openActorViewer, startActorViewerEdit, cancelActorViewerEdit, saveActorViewerChanges,
   openActionsViewer, selectActionFromViewer
-} from './modules/actor-viewer.js';
+} from 'actor-viewer';
 import {
   openMonsterEditor, updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster,
   openPCEditor, savePC, deletePC,
   openAbilityPool, openAbilityEditor, saveAbility, deleteAbility, attachAbilityToDraft,
   openActionPool, attachActionToDraft,
   openActionEditor, openActionEditorForDraft, saveAction, addDamageToActionDraft, deleteAction
-} from './modules/entity-crud.js';
-import { autoAdjustCR } from './modules/cr-adjustment.js';
+} from 'entity-crud';
+import { autoAdjustCR } from 'cr-adjustment';
 import {
   standardizeToParticipant, addParticipantAndProcessInitiative, addToBattleFromEditor, addToBattleFromMonster, addToBattleFromPC,
   promptAddParticipants, addParticipantsFromMonster, addParticipantsFromPC,
   resetBattle, rollInitiative, setCurrentActor, removeParticipant, nextTurn, prevTurn, onDragStart, onDrop
-} from './modules/battle-core.js';
+} from 'battle-core';
 import {
   applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
   openStatusPicker, applyStatus, removeStatus
-} from './modules/hp-status.js';
+} from 'hp-status';
 import {
   toggleTarget, toggleSelectGroup, selectNone
-} from './modules/targeting.js';
+} from 'targeting';
 import {
   promptSaveCheck, selectAction, calculateModifiedDamage, runAction, applySaveOutcomes,
   dismissCurrentNotification, processNotificationQueue
-} from './modules/action-execution.js';
+} from 'action-execution';
 import {
   openQuickDice, executeQuickRoll
-} from './modules/quick-dice.js';
+} from 'quick-dice';
 // 注意: quickRollInput 从 state.js 导入，quick-dice.js 仅导出逻辑
-import { exportAll, importAll } from './modules/import-export.js';
+import { exportAll, importAll } from 'import-export';
 import {
   openGroupManager, openGroupEditor, addMonsterToGroupDraft, saveGroup, deleteGroup, addParticipantsFromGroup
-} from './modules/monster-groups.js';
-import { setupKeyboardShortcuts } from './modules/keyboard-shortcuts.js';
-import { useComputed } from './modules/use-computed.js';
+} from 'monster-groups';
+import { setupKeyboardShortcuts } from 'keyboard-shortcuts';
+import { useComputed } from 'use-computed';
 
 createApp({
   setup() {
@@ -211,3 +211,4 @@ createApp({
 }).mount('#app');
 
 document.body.classList.remove('loading');
+

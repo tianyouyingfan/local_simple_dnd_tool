@@ -2,10 +2,10 @@
  * 战斗核心逻辑模块
  */
 import { nextTick } from 'vue';
-import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from './state.js';
-import { deepClone, rollSingleInitiative } from './utils.js';
-import { sortParticipantsByInitiative } from './helpers.js';
-import { useToasts } from './use-toasts.js';
+import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from 'state';
+import { deepClone, rollSingleInitiative } from 'utils';
+import { sortParticipantsByInitiative } from 'helpers';
+import { useToasts } from 'use-toasts';
 
 const { toast } = useToasts();
 
@@ -228,3 +228,4 @@ export function onDrop(idx) {
     battle.participants.splice(idx, 0, item);
     battle.dragIndex = null;
 }
+

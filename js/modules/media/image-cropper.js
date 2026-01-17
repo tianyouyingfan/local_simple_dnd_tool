@@ -2,10 +2,10 @@
  * 图片裁剪器实例管理模块
  */
 import { ref } from 'vue';
-import { useImageCropper } from './use-image-cropper.js';
-import { ui, uiState } from './state.js';
-import { useToasts } from './use-toasts.js';
-import { HELPERS_CONSTANTS } from './helpers.js';
+import { useImageCropper } from 'use-image-cropper';
+import { ui, uiState } from 'state';
+import { useToasts } from 'use-toasts';
+import { HELPERS_CONSTANTS } from 'helpers';
 
 // DOM refs
 export const cropperCanvas = ref(null);
@@ -85,3 +85,4 @@ export function confirmAvatarCrop() {
     if (!res.ok) toast('错误：头像裁剪失败，请重试。');
     else toast('头像已更新');
 }
+

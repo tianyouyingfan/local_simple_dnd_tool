@@ -1,7 +1,7 @@
 /**
  * 目标选择模块
  */
-import { ui } from './state.js';
+import { ui } from 'state';
 
 export function toggleTarget(uid) {
     const i = ui.selectedTargets.indexOf(uid);
@@ -17,3 +17,4 @@ export function toggleSelectGroup(g) {
 }
 
 export function selectNone() { ui.selectedTargets = []; }
+

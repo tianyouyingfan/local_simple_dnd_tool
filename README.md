@@ -194,20 +194,36 @@ http-server
 - **显示规则**：虚假生命为 0 时自动隐藏以节省空间
 - **覆盖规则**：当前实现为“直接设置为指定数值”，不会自动取较大值/不叠加
 
+
 ## 技术架构
 
 - **前端框架**：Vue 3 + Composition API
-- **状态管理**：轻量级响应式状态管理（reactive/ref）
-- **数据持久化**：Dexie.js (IndexedDB 封装)
-- **模块化架构**：基于 ES Modules 的清晰分层架构（18+ 独立功能模块）
-- **离线支持**：Service Worker 实现 PWA 离线功能
-- **图片处理**：Canvas API实现图片裁剪与预览，支持矩形和圆形裁剪
-- **快捷键系统**：双击检测与事件防抖，避免与输入框冲突
-- **通知系统**：Toast消息队列和全屏动画通知队列管理
-- **拖拽排序**：原生HTML5拖拽API实现先攻序列手动调整
+- **状态管理**：轻量级响应式状态（ref/reactive，集中于 `js/modules/state/`）
+- **数据持久化**：Dexie.js（IndexedDB 封装，集中于 `js/modules/infra/persistence/`）
+- **模块化架构**：ES Modules + importmap（项目内模块统一使用裸导入）
+- **离线支持**：Service Worker（预缓存入口与所有模块文件）
+
+## 代码结构（modules 分层）
+
+`js/modules/` 采用“外层按职责、内层按功能”的分层：
+
+- `shared/`：无状态工具与通用 helpers（纯函数优先）
+- `state/`：全局响应式状态与常量
+- `infra/persistence/`：Dexie/IndexedDB 与数据加载、导入导出
+- `domain/`：业务域逻辑
+  - `battle/`：战斗流程、目标选择、HP/状态、动作结算、快速投骰
+  - `entities/`：怪物/PC/动作/能力等实体编辑与查看
+  - `groups/`：怪物组合/遭遇组管理
+- `app/`：应用编排层（例如全局快捷键注册）
+- `composables/`：可复用组合式逻辑（use-*）
+- `media/`：图片/媒体相关逻辑
+
+## importmap 与裸导入约定
+
+- **项目内模块统一使用裸导入**（例如 `import { battle } from 'state'`、`import { loadAll } from 'data-loader'`），避免目录调整导致相对路径连锁修改。
+- 裸导入名称与实际文件路径的映射集中维护在 `index.html` 的 `<script type="importmap">` 中。
 
 ---
-
 ## Roadmap
 
 - [ ] 完善主题系统实现（切换按钮已就位）
@@ -249,3 +265,6 @@ http-server
 <div align="center">
   <p><strong>祝你的冒险旅程顺利！</strong></p>
 </div>
+
+
+

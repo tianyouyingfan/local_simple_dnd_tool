@@ -1,10 +1,10 @@
 /**
  * 角色查看器 (Actor Viewer) 模块
  */
-import { ui, uiState } from './state.js';
-import { deepClone } from './utils.js';
-import { useToasts } from './use-toasts.js';
-import { selectAction } from './action-execution.js'; // 注意：此模块将在后续步骤创建
+import { ui, uiState } from 'state';
+import { deepClone } from 'utils';
+import { useToasts } from 'use-toasts';
+import { selectAction } from 'action-execution'; // 注意：此模块将在后续步骤创建
 
 const { toast } = useToasts();
 
@@ -45,3 +45,4 @@ export function selectActionFromViewer(action) {
     selectAction(action);
     ui.actorViewer.open = false;
 }
+
