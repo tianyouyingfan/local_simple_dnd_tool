@@ -12,6 +12,7 @@ const { toast } = useToasts();
 export function standardizeToParticipant(x) {
     const uid = crypto.randomUUID();
     const isPc = !!x.hpMax;
+    const resolvedHpMax = x.hpMax || x.hp?.average || 10;
     return {
         uid,
         baseId: x.id || null,
@@ -19,7 +20,8 @@ export function standardizeToParticipant(x) {
         type: isPc ? 'pc' : 'monster',
         avatar: x.avatar || (x.type?.includes?.('dragon') ? '🐲' : (isPc ? '🧝' : '👾')),
         ac: x.ac || 12,
-        hpMax: x.hpMax || x.hp?.average || 10,
+        baseMaxHp: x.baseMaxHp || resolvedHpMax,
+        hpMax: resolvedHpMax,
         hpCurrent: x.hpCurrent || x.hp?.average || 10,
         abilities: x.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
         resistances: deepClone(x.resistances || { damage: [], conditions: [] }),

@@ -218,6 +218,11 @@ export const ui = reactive({
         damageAmount: null,
         targetName: ''
     },
+    exhaustionDeathConfirm: {
+        open: false,
+        targetUid: null,
+        targetName: ''
+    },
     actionOnCooldown: false,
     selectedAction: null,
     rollMode: 'normal',

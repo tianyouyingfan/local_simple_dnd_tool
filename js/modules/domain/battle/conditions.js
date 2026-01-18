@@ -157,14 +157,14 @@ export const conditionDefinitions = Object.freeze({
     key: CONDITION_KEYS.PARALYZED,
     displayName: '麻痹 Paralyzed',
     icon: '🧊',
-    automationLevel: 'partial',
+    automationLevel: 'full',
     requiresSource: false,
   },
   [CONDITION_KEYS.PETRIFIED]: {
     key: CONDITION_KEYS.PETRIFIED,
     displayName: '石化 Petrified',
     icon: '🗿',
-    automationLevel: 'partial',
+    automationLevel: 'full',
     requiresSource: false,
   },
   [CONDITION_KEYS.POISONED]: {
@@ -178,7 +178,7 @@ export const conditionDefinitions = Object.freeze({
     key: CONDITION_KEYS.PRONE,
     displayName: '倒地 Prone',
     icon: '🛌',
-    automationLevel: 'partial',
+    automationLevel: 'full',
     requiresSource: false,
   },
   [CONDITION_KEYS.RESTRAINED]: {
@@ -192,14 +192,14 @@ export const conditionDefinitions = Object.freeze({
     key: CONDITION_KEYS.STUNNED,
     displayName: '震慑 Stunned',
     icon: '💫',
-    automationLevel: 'partial',
+    automationLevel: 'full',
     requiresSource: false,
   },
   [CONDITION_KEYS.UNCONSCIOUS]: {
     key: CONDITION_KEYS.UNCONSCIOUS,
     displayName: '昏迷 Unconscious',
     icon: '😴',
-    automationLevel: 'partial',
+    automationLevel: 'full',
     requiresSource: false,
   },
   [CONDITION_KEYS.EXHAUSTION]: {
@@ -413,7 +413,7 @@ export function getAutoAttackRollMode(actor, target) {
 
 export function getTargetBadges(actor, target, action, dmRollMode) {
   const infoBadges = [];
-  const modeBadges = [];
+  let suffix = null;
 
   if (hasCondition(target, CONDITION_KEYS.PARALYZED) || hasCondition(target, CONDITION_KEYS.UNCONSCIOUS)) {
     infoBadges.push({ kind: 'info', text: '5尺内重击', tone: 'ok' });
@@ -427,11 +427,12 @@ export function getTargetBadges(actor, target, action, dmRollMode) {
 
   if (action?.type === 'attack') {
     const { selectable } = getTargetSelectability(actor, target, action);
-    if (!selectable) modeBadges.push({ kind: 'mode', text: '无法选中', tone: 'danger' });
-    else {
+    if (!selectable) {
+      suffix = { text: '无法选中', tone: 'danger' };
+    } else {
       const mode = dmRollMode && dmRollMode !== 'normal' ? dmRollMode : getAutoAttackRollMode(actor, target);
-      if (mode === 'adv') modeBadges.push({ kind: 'mode', text: '优势', tone: 'ok' });
-      else if (mode === 'dis') modeBadges.push({ kind: 'mode', text: '劣势', tone: 'danger' });
+      if (mode === 'adv') suffix = { text: '优势', tone: 'ok' };
+      else if (mode === 'dis') suffix = { text: '劣势', tone: 'danger' };
     }
   } else if (action?.type === 'save') {
     const ability = String(action.saveAbility || '').toLowerCase();
@@ -441,11 +442,11 @@ export function getTargetBadges(actor, target, action, dmRollMode) {
         hasCondition(target, CONDITION_KEYS.PETRIFIED) ||
         hasCondition(target, CONDITION_KEYS.STUNNED) ||
         hasCondition(target, CONDITION_KEYS.UNCONSCIOUS);
-      if (autoFail) modeBadges.push({ kind: 'mode', text: '豁免自动失败', tone: 'ok' });
+      if (autoFail) suffix = { text: '豁免自动失败', tone: 'ok' };
     }
   }
 
-  return { modeBadges, infoBadges };
+  return { suffix, infoBadges };
 }
 
 export function collectBeforeAttackPrompts(actor, target, action) {
@@ -509,4 +510,10 @@ export function isSaveAutoFailTarget(target, action) {
     hasCondition(target, CONDITION_KEYS.STUNNED) ||
     hasCondition(target, CONDITION_KEYS.UNCONSCIOUS)
   );
+}
+
+export function isSaveDisadvantageTarget(target, action) {
+  if (!target || !action || action.type !== 'save') return false;
+  const ex = getExhaustionLevel(target);
+  return ex != null && ex >= 3;
 }

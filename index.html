@@ -265,11 +265,11 @@
                                     <div class="hl"></div>
                                     <div class="row">
                                         <div class="section-title">自动化攻击流程</div>
-                                        <span class="pill">模式</span>
-                                        <select class="input" v-model="ui.rollMode">
-                                            <option value="normal">无</option>
-                                            <option value="adv">优势</option>
-                                            <option value="dis">劣势</option>
+                                        <span class="pill">DM强制</span>
+                                        <select class="input" v-model="ui.rollMode" title="覆盖系统自动计算的优势/劣势">
+                                            <option value="normal">自动</option>
+                                            <option value="adv">强制优势</option>
+                                            <option value="dis">强制劣势</option>
                                         </select>
                                         <span class="pill">自动扣血</span>
                                         <input type="checkbox" v-model="ui.autoApplyDamage">
@@ -330,9 +330,7 @@
                                             </div>
                                             <div style="font-weight:700" @click.stop="openQuickDamageEditor(p)"
                                                 style="cursor: pointer;">{{p.name}}</div>
-                                            <template v-for="b in getConditionTargetBadges(p).modeBadges" :key="b.text">
-                                                <span class="badge" :class="b.tone">{{b.text}}</span>
-                                            </template>
+                                            <span v-if="getConditionTargetBadges(p).suffix" class="target-suffix" :class="getConditionTargetBadges(p).suffix.tone">{{getConditionTargetBadges(p).suffix.text}}</span>
                                             <template v-for="b in getConditionTargetBadges(p).infoBadges" :key="b.text">
                                                 <span class="badge info" :class="b.tone">{{b.text}}</span>
                                             </template>
@@ -1677,6 +1675,7 @@
                             </div>
                             <strong style="margin-left: 8px;">{{ target.name }}</strong>
                             <span v-if="ui.saveOutcomePicker.autoFailTargets[target.uid]" class="badge ok" style="margin-left: 8px;">豁免自动失败</span>
+                            <span v-else-if="isSaveDisadvantageTarget(target, ui.saveOutcomePicker.action)" class="badge danger" style="margin-left: 8px;">豁免劣势(力竭)</span>
                             <div class="spacer"></div>
                             <div class="row">
                                 <label class="chip"
@@ -1704,6 +1703,23 @@
                 <div class="row">
                     <div class="spacer"></div>
                     <button class="btn ok" @click="applySaveOutcomes()">确认并应用结果</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态：力竭6级死亡确认 -->
+        <div class="modal-mask" v-if="ui.exhaustionDeathConfirm.open" style="z-index: 60;">
+            <div class="modal" style="max-width:400px">
+                <div class="row">
+                    <div class="title">确认死亡</div>
+                </div>
+                <div class="hl"></div>
+                <p>【{{ui.exhaustionDeathConfirm.targetName}}】因力竭6级而死亡，是否确认？</p>
+                <div class="hl"></div>
+                <div class="row">
+                    <div class="spacer"></div>
+                    <button class="btn danger" @click="confirmExhaustionDeath(true)">确认死亡</button>
+                    <button class="btn" @click="confirmExhaustionDeath(false)">取消</button>
                 </div>
             </div>
         </div>

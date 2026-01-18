@@ -40,7 +40,7 @@ import {
 } from 'battle-core';
 import {
   applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
-  openStatusPicker, applyStatus, removeStatus
+  openStatusPicker, applyStatus, removeStatus, confirmExhaustionDeath
 } from 'hp-status';
 import {
   toggleTarget, toggleSelectGroup, selectNone
@@ -66,6 +66,7 @@ import {
   getTargetBadges as getConditionTargetBadges,
   isActorIncapacitated,
   isManualOrPartialCondition,
+  isSaveDisadvantageTarget,
   normalizeStatusInstance
 } from 'conditions';
 
@@ -132,6 +133,8 @@ createApp({
           for (const p of battle.participants || []) {
             if (!Array.isArray(p.statuses)) p.statuses = [];
             p.statuses = p.statuses.map(normalizeStatusInstance).filter(Boolean);
+            // M1迁移: 为旧存档补充baseMaxHp字段
+            if (p.baseMaxHp == null) p.baseMaxHp = p.hpMax;
           }
         }
       } catch (e) {
@@ -201,7 +204,7 @@ createApp({
 
       // HP & status
       applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
-      openStatusPicker, applyStatus, removeStatus,
+      openStatusPicker, applyStatus, removeStatus, confirmExhaustionDeath,
 
       // Targeting
       toggleTarget, toggleSelectGroup, selectNone,
@@ -229,6 +232,7 @@ createApp({
       translateType: (t) => monsterTypeTranslations[t] || t,
       getConditionTargetBadges: (target) => getConditionTargetBadges(currentActor.value, target, ui.selectedAction, ui.rollMode),
       isActorIncapacitated: (p) => isActorIncapacitated(p),
+      isSaveDisadvantageTarget: (target, action) => isSaveDisadvantageTarget(target, action),
       formatStatusLabel: (s) => buildStatusDisplayName(s),
       isStatusManual: (s) => {
         const normalized = normalizeStatusInstance(s);

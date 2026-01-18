@@ -5,7 +5,7 @@ import { nextTick } from 'vue';
 import { battle, currentActor, ui, statusCatalog, quickDamageInput } from 'state';
 import { clamp } from 'utils';
 import { useToasts } from 'use-toasts';
-import { getConditionDefinition, getStatusIdentity, normalizeStatusInstance } from 'conditions';
+import { getConditionDefinition, getStatusIdentity, normalizeStatusInstance, getExhaustionLevel, CONDITION_KEYS } from 'conditions';
 
 const { toast } = useToasts();
 
@@ -42,6 +42,40 @@ export function setTempHp(p, amount) {
     if (isNaN(amount) || amount < 0) return;
     p.tempHp = amount;
     toast(`${p.name} 获得虚假生命: ${amount}`);
+}
+
+export function applyExhaustionHpCap(participant) {
+    const level = getExhaustionLevel(participant);
+    if (level != null && level >= 4) {
+        const newMax = Math.floor(participant.baseMaxHp / 2);
+        participant.hpMax = newMax;
+        if (participant.hpCurrent > newMax) {
+            participant.hpCurrent = newMax;
+        }
+    } else {
+        participant.hpMax = participant.baseMaxHp;
+    }
+}
+
+export function checkExhaustion6Death(participant) {
+    ui.exhaustionDeathConfirm.targetUid = participant.uid;
+    ui.exhaustionDeathConfirm.targetName = participant.name;
+    ui.exhaustionDeathConfirm.open = true;
+}
+
+export function confirmExhaustionDeath(confirmed) {
+    const target = battle.participants.find(p => p.uid === ui.exhaustionDeathConfirm.targetUid);
+    if (confirmed && target) {
+        target.hpCurrent = 0;
+        target.isDefeated = true;
+        toast(`【${target.name}】因力竭6级而死亡。`);
+    } else if (!confirmed && target) {
+        // 取消则回退到5级
+        const exStatus = target.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
+        if (exStatus && exStatus.meta) exStatus.meta.level = 5;
+        toast(`已取消，【${target.name}】力竭等级保持在5级。`);
+    }
+    ui.exhaustionDeathConfirm.open = false;
 }
 
 export function closeQuickDamageEditor() { ui.quickDamage.open = false; }
@@ -102,9 +136,23 @@ export function applyStatus() {
 
     t.statuses.push(instance);
     ui.statusPicker.open = false;
+
+    // 力竭特殊处理
+    if (instance.key === CONDITION_KEYS.EXHAUSTION) {
+        applyExhaustionHpCap(t);
+        // 力竭6级死亡确认
+        if (instance.meta?.level === 6) {
+            checkExhaustion6Death(t);
+        }
+    }
 }
 
 export function removeStatus(target, statusId) {
+    const removedStatus = target.statuses.find(s => s.id === statusId);
     target.statuses = target.statuses.filter(s => s.id !== statusId);
+    // 移除力竭后重新计算HP上限
+    if (removedStatus?.key === CONDITION_KEYS.EXHAUSTION) {
+        applyExhaustionHpCap(target);
+    }
 }
 

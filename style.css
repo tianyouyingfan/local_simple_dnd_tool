@@ -510,6 +510,20 @@ summary.section-title {
     opacity: .95
 }
 
+.target-suffix {
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.target-suffix.ok {
+    color: var(--ok)
+}
+
+.target-suffix.danger {
+    color: var(--danger)
+}
+
 .log {
     font-family: var(--mono);
     white-space: pre-wrap;
