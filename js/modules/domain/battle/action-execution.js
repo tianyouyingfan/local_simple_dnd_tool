@@ -7,6 +7,18 @@ import { deepClone, rollD20, rollDamage, rollDamageWithDetails, clamp } from 'ut
 import { useToasts } from 'use-toasts';
 import { applyHPDelta } from 'hp-status';
 import { selectNone } from 'targeting';
+import {
+    CONDITION_KEYS,
+    collectAfterHitBeforeDamagePrompts,
+    collectBeforeAttackPrompts,
+    getAttackRollFlags,
+    getConditionDefinition,
+    getStatusIdentity,
+    hasCondition,
+    isActorIncapacitated,
+    isSaveAutoFailTarget,
+    normalizeStatusInstance
+} from 'conditions';
 
 const { toast } = useToasts();
 
@@ -22,6 +34,19 @@ export const promptSaveCheck = (target, action, onSaveFail) => {
     ui.saveCheck.open = true;
 };
 
+export const promptBinary = ({ title, message, yesText, noText }) => new Promise((resolve) => {
+    ui.binaryPrompt.title = title || '确认';
+    ui.binaryPrompt.message = message || '';
+    ui.binaryPrompt.yesText = yesText || '是';
+    ui.binaryPrompt.noText = noText || '否';
+    ui.binaryPrompt.callback = (result) => {
+        ui.binaryPrompt.open = false;
+        ui.binaryPrompt.callback = null;
+        resolve(!!result);
+    };
+    ui.binaryPrompt.open = true;
+});
+
 export function selectAction(a) {
     ui.selectedAction = deepClone(a);
     ui.log = `已选择动作：${a.name}\n`;
@@ -29,9 +54,12 @@ export function selectAction(a) {
 
 export function calculateModifiedDamage(target, damageAmount, damageType) {
     if (target.immunities?.damage?.includes(damageType)) return 0;
-    if (target.vulnerabilities?.damage?.includes(damageType)) return damageAmount * 2;
-    if (target.resistances?.damage?.includes(damageType)) return Math.floor(damageAmount / 2);
-    return damageAmount;
+    let result = damageAmount;
+    if (target.vulnerabilities?.damage?.includes(damageType)) result *= 2;
+    const petrifiedAllResist = hasCondition(target, CONDITION_KEYS.PETRIFIED);
+    const hasResist = petrifiedAllResist || target.resistances?.damage?.includes(damageType);
+    if (hasResist) result = Math.floor(result / 2);
+    return result;
 }
 
 export function processNotificationQueue() {
@@ -56,7 +84,7 @@ export function formatRolledDamages(rolledDamages) {
     return rolledDamages.map(d => `${d.amount} ${d.type}`).join(' + ');
 }
 
-export function runAction() {
+export async function runAction() {
     if (ui.actionOnCooldown) return;
     ui.actionOnCooldown = true;
     setTimeout(() => { ui.actionOnCooldown = false; }, 5000);
@@ -64,6 +92,7 @@ export function runAction() {
     const actor = currentActor.value;
     const action = ui.selectedAction;
     if (!actor || !action) return;
+    if (isActorIncapacitated(actor)) return toast(`【${actor.name}】处于失能状态，无法执行动作或反应。`);
 
     // 兼容旧结构：攻击/豁免动作可能还带 damageDice
     if ((action.type === 'attack' || action.type === 'save') && !action.damages && action.damageDice) {
@@ -77,7 +106,32 @@ export function runAction() {
 
     if (action.type === 'attack') {
         for (const t of targets) {
-            const d20 = rollD20(ui.rollMode);
+            if (hasCondition(actor, CONDITION_KEYS.CHARMED, s => s.sourceUid && s.sourceUid === t.uid)) {
+                log += `- 目标【${t.name}】 -> 无法选中（魅惑禁选）\n`;
+                continue;
+            }
+
+            let rollMode = ui.rollMode;
+            if (rollMode === 'normal') {
+                const flags = getAttackRollFlags(actor, t);
+                let { hasAdv, hasDis } = flags;
+
+                for (const p of collectBeforeAttackPrompts(actor, t, action)) {
+                    const answer = await promptBinary(p);
+                    if (p.type === 'proneDistance') {
+                        if (answer) hasAdv = true;
+                        else hasDis = true;
+                    } else if (p.type === 'frightenedLOS') {
+                        if (answer) hasDis = true;
+                    }
+                }
+
+                if (hasAdv && hasDis) rollMode = 'normal';
+                else if (hasAdv) rollMode = 'adv';
+                else if (hasDis) rollMode = 'dis';
+            }
+
+            const d20 = rollD20(rollMode);
             const toHit = d20.value + (action.attackBonus || 0);
             const hit = (d20.value === 20) || (toHit >= t.ac);
 
@@ -86,10 +140,19 @@ export function runAction() {
             if (hit && !d20.isFumble) {
                 const allDamageDetails = [];
                 let totalFinalDamage = 0;
+                let isCrit = d20.isCrit;
+
+                if (!isCrit) {
+                    for (const p of collectAfterHitBeforeDamagePrompts(actor, t, action)) {
+                        const answer = await promptBinary(p);
+                        if (p.type === 'meleeCritDistance' && answer) isCrit = true;
+                    }
+                }
+                if (isCrit && !d20.isCrit) log += `  -> 5尺内命中，视为重击\n`;
 
                 for (const dmg of action.damages || []) {
                     if (!dmg.dice) continue;
-                    const details = rollDamageWithDetails(dmg.dice, d20.isCrit, dmg.type);
+                    const details = rollDamageWithDetails(dmg.dice, isCrit, dmg.type);
                     const raw = details.total;
                     const final = calculateModifiedDamage(t, raw, dmg.type);
                     totalFinalDamage += final;
@@ -104,8 +167,8 @@ export function runAction() {
 
                 if (allDamageDetails.length > 0) {
                     ui.notificationQueue.push({
-                        type: d20.isCrit ? 'crit' : 'hit',
-                        data: d20.isCrit
+                        type: isCrit ? 'crit' : 'hit',
+                        data: isCrit
                             ? {
                                 type: 'success',
                                 attacker: actor.name, target: t.name,
@@ -141,15 +204,19 @@ export function runAction() {
 
                 if (action.onHitStatus) {
                     const apply = () => {
-                        const exists = t.statuses.find(s => s.name === action.onHitStatus);
-                        if (exists) return;
                         const info = statusCatalog.value.find(sc => sc.name === action.onHitStatus) || {};
-                        t.statuses.push({
-                            id: crypto.randomUUID(),
+                        const instance = normalizeStatusInstance({
                             name: action.onHitStatus,
                             rounds: action.onHitStatusRounds || 1,
-                            icon: info.icon || '⏳'
+                            icon: info.icon || '⏳',
                         });
+                        const def = getConditionDefinition(instance?.key);
+                        if (def?.requiresSource && !instance.sourceUid) instance.sourceUid = actor.uid;
+
+                        const identity = getStatusIdentity(instance).identity;
+                        if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) return;
+
+                        t.statuses.push(instance);
                         log += `  -> ${t.name} 获得了状态: ${action.onHitStatus}.\n`;
                     };
 
@@ -197,8 +264,14 @@ export function runAction() {
         ui.saveOutcomePicker.targets = deepClone(targets);
         ui.saveOutcomePicker.damages = rolledDamages;
         ui.saveOutcomePicker.outcomes = {};
+        ui.saveOutcomePicker.autoFailTargets = {};
         for (const t of targets) {
-            ui.saveOutcomePicker.outcomes[t.uid] = action.onSuccess === 'half' ? 'half' : 'fail';
+            if (isSaveAutoFailTarget(t, action)) {
+                ui.saveOutcomePicker.outcomes[t.uid] = 'fail';
+                ui.saveOutcomePicker.autoFailTargets[t.uid] = true;
+            } else {
+                ui.saveOutcomePicker.outcomes[t.uid] = action.onSuccess === 'half' ? 'half' : 'fail';
+            }
         }
         ui.log = log + '请在弹出的窗口中为每个目标选择豁免结果。';
         ui.saveOutcomePicker.open = true;

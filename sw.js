@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dnd-assist-v0.5.1-modular-structure';
+const CACHE_NAME = 'dnd-assist-v0.5.3-condition-system';
 
 const urlsToCache = [
   '/',
@@ -10,6 +10,7 @@ const urlsToCache = [
   'js/main.js',
   'js/vendor/vue.js',
   'js/vendor/dexie.js',
+  'js/modules/domain/battle/conditions.js',
   'js/modules/app/keyboard-shortcuts.js',
   'js/modules/composables/use-computed.js',
   'js/modules/composables/use-image-cropper.js',
@@ -34,6 +35,28 @@ const urlsToCache = [
   'js/modules/state/state.js'
 ];
 
+const LEGACY_MODULE_ALIASES = {
+  '/js/modules/helpers.js': 'js/modules/shared/helpers.js',
+  '/js/modules/utils.js': 'js/modules/shared/utils.js',
+  '/js/modules/use-toasts.js': 'js/modules/composables/use-toasts.js',
+  '/js/modules/use-computed.js': 'js/modules/composables/use-computed.js',
+  '/js/modules/use-image-cropper.js': 'js/modules/composables/use-image-cropper.js',
+  '/js/modules/data-loader.js': 'js/modules/infra/persistence/data-loader.js',
+  '/js/modules/import-export.js': 'js/modules/infra/persistence/import-export.js',
+  '/js/modules/ui-toggles.js': 'js/modules/domain/entities/ui-toggles.js',
+  '/js/modules/image-cropper.js': 'js/modules/media/image-cropper.js',
+  '/js/modules/actor-viewer.js': 'js/modules/domain/entities/actor-viewer.js',
+  '/js/modules/entity-crud.js': 'js/modules/domain/entities/entity-crud.js',
+  '/js/modules/cr-adjustment.js': 'js/modules/domain/entities/cr-adjustment.js',
+  '/js/modules/battle-core.js': 'js/modules/domain/battle/battle-core.js',
+  '/js/modules/hp-status.js': 'js/modules/domain/battle/hp-status.js',
+  '/js/modules/targeting.js': 'js/modules/domain/battle/targeting.js',
+  '/js/modules/action-execution.js': 'js/modules/domain/battle/action-execution.js',
+  '/js/modules/quick-dice.js': 'js/modules/domain/battle/quick-dice.js',
+  '/js/modules/monster-groups.js': 'js/modules/domain/groups/monster-groups.js',
+  '/js/modules/keyboard-shortcuts.js': 'js/modules/app/keyboard-shortcuts.js',
+};
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -52,8 +75,24 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  const isIndex = url.pathname === '/' || url.pathname.endsWith('/index.html');
+  if (event.request.mode === 'navigate' || isIndex) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  const alias = LEGACY_MODULE_ALIASES[url.pathname];
+  if (alias) {
+    event.respondWith(
+      caches.match(alias).then(response => response || fetch(alias))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });

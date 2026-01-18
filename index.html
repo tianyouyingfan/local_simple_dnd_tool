@@ -162,9 +162,9 @@
                                 <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
                             </div>
                             <div class="statuses">
-                                <span v-for="s in p.statuses" :key="s.id" class="status"
-                                    :data-tooltip="s.name + ' 剩余'+ s.rounds +'回合'">
-                                    {{s.icon || '⏳'}} {{s.name}} ({{s.rounds}})
+                                <span v-for="s in p.statuses" :key="s.id" class="status" :class="{manual: isStatusManual(s)}"
+                                    :data-tooltip="formatStatusLabel(s) + ' 剩余'+ s.rounds +'回合'" @click.stop="openConditionInfo(p,s)">
+                                    {{s.icon || '⏳'}} {{formatStatusLabel(s)}} ({{s.rounds}})
                                 </span>
                             </div>
                             <div class="row">
@@ -252,7 +252,7 @@
                                 <div class="section-title">动作/能力</div>
                                 <div class="actions-list">
                                     <button class="btn" v-for="a in sortedCurrentActorActions" :key="a.id"
-                                        @click="selectAction(a)" :disabled="a.cooldown > 0">
+                                        @click="selectAction(a)" :disabled="a.cooldown > 0 || isActorIncapacitated(currentActor)">
                                         {{a.name}}
                                         <span v-if="a.cooldown > 0" class="muted small">(冷却中 {{a.cooldown}})</span>
                                         <span v-else class="muted small">({{a.type}})</span>
@@ -274,7 +274,7 @@
                                         <span class="pill">自动扣血</span>
                                         <input type="checkbox" v-model="ui.autoApplyDamage">
                                         <div class="spacer"></div>
-                                        <button class="btn" @click="runAction()" :disabled="ui.actionOnCooldown">
+                                        <button class="btn" @click="runAction()" :disabled="ui.actionOnCooldown || isActorIncapacitated(currentActor)">
                                             {{ ui.actionOnCooldown ? '执行中...' : `执行 ${ui.selectedAction.name}` }}
                                         </button>
                                         <button class="btn ghost" @click="ui.selectedAction=null">取消</button>
@@ -292,8 +292,9 @@
                                     <span class="muted small">状态到期后将自动移除（回合开始时结算）</span>
                                 </div>
                                 <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
-                                    <span v-for="s in currentActor.statuses" :key="s.id" class="status">
-                                        {{s.icon || '⏳'}} {{s.name}} ({{s.rounds}})
+                                    <span v-for="s in currentActor.statuses" :key="s.id" class="status" :class="{manual: isStatusManual(s)}"
+                                        @click.stop="openConditionInfo(currentActor,s)" style="cursor: pointer;">
+                                        {{s.icon || '⏳'}} {{formatStatusLabel(s)}} ({{s.rounds}})
                                         <button class="btn small ghost"
                                             @click="removeStatus(currentActor, s.id)">移除</button>
                                     </span>
@@ -329,6 +330,12 @@
                                             </div>
                                             <div style="font-weight:700" @click.stop="openQuickDamageEditor(p)"
                                                 style="cursor: pointer;">{{p.name}}</div>
+                                            <template v-for="b in getConditionTargetBadges(p).modeBadges" :key="b.text">
+                                                <span class="badge" :class="b.tone">{{b.text}}</span>
+                                            </template>
+                                            <template v-for="b in getConditionTargetBadges(p).infoBadges" :key="b.text">
+                                                <span class="badge info" :class="b.tone">{{b.text}}</span>
+                                            </template>
                                             <div class="spacer"></div>
                                             <div class="hp">{{p.hpCurrent}}/{{p.hpMax}}</div>
                                             <transition name="toast-fade">
@@ -1346,6 +1353,12 @@
                     <select class="input" v-model="ui.statusPicker.selectedName">
                         <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
                     </select>
+                    <select v-if="statusPickerRequiresSource()" class="input" v-model="ui.statusPicker.sourceUid" style="min-width: 180px;">
+                        <option :value="null">选择来源生物</option>
+                        <option v-for="p in battle.participants" :key="p.uid" :value="p.uid" v-if="p.uid !== ui.statusPicker.targetUid">
+                            {{ p.name }}
+                        </option>
+                    </select>
                     <input type="number" class="input" style="width:120px" v-model.number="ui.statusPicker.rounds"
                         placeholder="持续回合数">
                     <input class="input" style="width:120px" v-model="ui.statusPicker.icon" placeholder="图标(emoji 可)">
@@ -1354,6 +1367,24 @@
                 <div class="ok-zone small" style="margin-top:8px">
                     已支持自动追踪状态时长，每到回合开始自动 -1，至 0 自动移除。也可手动移除或调整。
                 </div>
+            </div>
+        </div>
+
+        <div class="modal-mask" v-if="ui.conditionInfo.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">{{ ui.conditionInfo.icon }} {{ ui.conditionInfo.title }}</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.conditionInfo.open=false">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="row" style="flex-wrap: wrap; gap: 8px;">
+                    <span v-if="ui.conditionInfo.sourceName" class="pill">来源：{{ ui.conditionInfo.sourceName }}</span>
+                    <span v-if="ui.conditionInfo.automationLevel !== 'full'" class="pill"
+                        style="border-color: var(--accent); color: var(--accent);">需 DM 手动裁定</span>
+                </div>
+                <div class="hl"></div>
+                <div v-html="ui.conditionInfo.html"></div>
             </div>
         </div>
 
@@ -1608,6 +1639,24 @@
             </div>
         </div>
 
+        <div class="modal-mask" v-if="ui.binaryPrompt.open">
+            <div class="modal">
+                <div class="row">
+                    <div class="title">{{ ui.binaryPrompt.title }}</div>
+                    <div class="spacer"></div>
+                    <button class="btn" @click="ui.binaryPrompt.callback && ui.binaryPrompt.callback(false)">关闭</button>
+                </div>
+                <div class="hl"></div>
+                <div class="placeholder" style="white-space: pre-wrap; text-align: left;">{{ ui.binaryPrompt.message }}</div>
+                <div class="hl"></div>
+                <div class="row">
+                    <button class="btn ok" @click="ui.binaryPrompt.callback(true)">{{ ui.binaryPrompt.yesText }}</button>
+                    <div class="spacer"></div>
+                    <button class="btn danger" @click="ui.binaryPrompt.callback(false)">{{ ui.binaryPrompt.noText }}</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 模态：豁免结果选择器 -->
         <div class="modal-mask" v-if="ui.saveOutcomePicker.open">
             <div class="modal">
@@ -1627,6 +1676,7 @@
                                 <span v-else>🎯</span>
                             </div>
                             <strong style="margin-left: 8px;">{{ target.name }}</strong>
+                            <span v-if="ui.saveOutcomePicker.autoFailTargets[target.uid]" class="badge ok" style="margin-left: 8px;">豁免自动失败</span>
                             <div class="spacer"></div>
                             <div class="row">
                                 <label class="chip"
@@ -1637,11 +1687,13 @@
                                 <label class="chip"
                                     :class="{active: ui.saveOutcomePicker.outcomes[target.uid] === 'half'}">
                                     <input type="radio" :name="'outcome-' + target.uid" value="half"
+                                        :disabled="ui.saveOutcomePicker.autoFailTargets[target.uid]"
                                         v-model="ui.saveOutcomePicker.outcomes[target.uid]"> 伤害减半
                                 </label>
                                 <label class="chip"
                                     :class="{active: ui.saveOutcomePicker.outcomes[target.uid] === 'zero'}">
                                     <input type="radio" :name="'outcome-' + target.uid" value="zero"
+                                        :disabled="ui.saveOutcomePicker.autoFailTargets[target.uid]"
                                         v-model="ui.saveOutcomePicker.outcomes[target.uid]"> 伤害全免
                                 </label>
                             </div>
@@ -1875,6 +1927,7 @@
     "hp-status": "./js/modules/domain/battle/hp-status.js",
     "targeting": "./js/modules/domain/battle/targeting.js",
     "quick-dice": "./js/modules/domain/battle/quick-dice.js",
+    "conditions": "./js/modules/domain/battle/conditions.js",
 
     "entity-crud": "./js/modules/domain/entities/entity-crud.js",
     "actor-viewer": "./js/modules/domain/entities/actor-viewer.js",

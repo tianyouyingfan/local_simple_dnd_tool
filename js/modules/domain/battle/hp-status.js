@@ -2,9 +2,10 @@
  * HP 与 状态管理模块
  */
 import { nextTick } from 'vue';
-import { battle, ui, statusCatalog, quickDamageInput } from 'state';
+import { battle, currentActor, ui, statusCatalog, quickDamageInput } from 'state';
 import { clamp } from 'utils';
 import { useToasts } from 'use-toasts';
+import { getConditionDefinition, getStatusIdentity, normalizeStatusInstance } from 'conditions';
 
 const { toast } = useToasts();
 
@@ -72,6 +73,8 @@ export function openHPEditor(participant) {
 export function openStatusPicker(target) {
     ui.statusPicker.open = true;
     ui.statusPicker.targetUid = target.uid;
+    const fallback = currentActor.value?.uid;
+    ui.statusPicker.sourceUid = fallback && fallback !== target.uid ? fallback : null;
     if (statusCatalog.value.length > 0) {
         ui.statusPicker.selectedName = statusCatalog.value[0].name;
         ui.statusPicker.icon = statusCatalog.value[0].icon;
@@ -81,12 +84,23 @@ export function openStatusPicker(target) {
 export function applyStatus() {
     const t = battle.participants.find(p => p.uid === ui.statusPicker.targetUid);
     if (!t) return;
-    t.statuses.push({
-        id: crypto.randomUUID(),
+    const instance = normalizeStatusInstance({
         name: ui.statusPicker.selectedName,
-        icon: ui.statusPicker.icon || '⏳',
+        icon: ui.statusPicker.icon,
         rounds: ui.statusPicker.rounds || 1,
+        sourceUid: ui.statusPicker.sourceUid || null,
     });
+    if (!instance?.key) return toast('该状态暂不支持（缺少状态定义）');
+    const def = getConditionDefinition(instance.key);
+    if (def?.requiresSource && !instance.sourceUid) return toast('该状态需要选择来源生物');
+
+    const identity = getStatusIdentity(instance).identity;
+    if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) {
+        ui.statusPicker.open = false;
+        return toast('该状态已存在');
+    }
+
+    t.statuses.push(instance);
     ui.statusPicker.open = false;
 }
 

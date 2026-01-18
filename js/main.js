@@ -2,11 +2,11 @@ import { createApp, watch, nextTick } from 'vue';
 import * as utils from 'utils';
 import {
   route, monsters, abilities, pcs, actions, monsterGroups, monsterFilters,
-  battle, ui, uiState, currentActor, participantTiles, hpDelta, quickDamageInput, quickRollInput
+  battle, ui, uiState, currentActor, participantTiles, hpDelta, quickDamageInput, quickRollInput, statusCatalog
 } from 'state';
 import {
   monsterTypes, damageTypes, conditionTypes, monsterTypeTranslations,
-  crOptions, statusCatalog
+  crOptions
 } from 'constants';
 
 // 导入新模块
@@ -59,6 +59,15 @@ import {
 } from 'monster-groups';
 import { setupKeyboardShortcuts } from 'keyboard-shortcuts';
 import { useComputed } from 'use-computed';
+import {
+  buildStatusDisplayName,
+  getConditionDefinition,
+  getConditionKeyEffectsHtml,
+  getTargetBadges as getConditionTargetBadges,
+  isActorIncapacitated,
+  isManualOrPartialCondition,
+  normalizeStatusInstance
+} from 'conditions';
 
 createApp({
   setup() {
@@ -93,6 +102,14 @@ createApp({
     watch(() => ui.statusPicker.selectedName, (newName) => {
       const selected = statusCatalog.value.find(s => s.name === newName);
       if (selected) ui.statusPicker.icon = selected.icon;
+      const normalized = normalizeStatusInstance({ name: newName, icon: ui.statusPicker.icon, rounds: ui.statusPicker.rounds });
+      const def = getConditionDefinition(normalized?.key);
+      if (def?.requiresSource) {
+        const fallback = currentActor.value?.uid;
+        ui.statusPicker.sourceUid = fallback && fallback !== ui.statusPicker.targetUid ? fallback : null;
+      } else {
+        ui.statusPicker.sourceUid = null;
+      }
     });
 
     watch(() => battle.currentIndex, () => { hpDelta.value = 5; });
@@ -112,6 +129,10 @@ createApp({
         if (saved) {
           const parsed = safeJsonParse(saved);
           if (parsed) Object.assign(battle, parsed);
+          for (const p of battle.participants || []) {
+            if (!Array.isArray(p.statuses)) p.statuses = [];
+            p.statuses = p.statuses.map(normalizeStatusInstance).filter(Boolean);
+          }
         }
       } catch (e) {
         console.error('Failed to load battle state:', e);
@@ -206,6 +227,34 @@ createApp({
       formatDamages, formatRolledDamages,
       mod: (v) => utils.abilityMod(Number(v) || 10),
       translateType: (t) => monsterTypeTranslations[t] || t,
+      getConditionTargetBadges: (target) => getConditionTargetBadges(currentActor.value, target, ui.selectedAction, ui.rollMode),
+      isActorIncapacitated: (p) => isActorIncapacitated(p),
+      formatStatusLabel: (s) => buildStatusDisplayName(s),
+      isStatusManual: (s) => {
+        const normalized = normalizeStatusInstance(s);
+        return isManualOrPartialCondition(normalized?.key);
+      },
+      openConditionInfo: (participant, status) => {
+        const normalized = normalizeStatusInstance(status);
+        const def = getConditionDefinition(normalized?.key);
+        ui.conditionInfo.targetUid = participant?.uid || null;
+        ui.conditionInfo.statusId = normalized?.id || null;
+        ui.conditionInfo.key = normalized?.key || null;
+        ui.conditionInfo.icon = normalized?.icon || '';
+        ui.conditionInfo.title = buildStatusDisplayName(normalized);
+        ui.conditionInfo.automationLevel = def?.automationLevel || 'full';
+        ui.conditionInfo.sourceName = '';
+        if (normalized?.sourceUid) {
+          const source = battle.participants.find(p => p.uid === normalized.sourceUid);
+          if (source) ui.conditionInfo.sourceName = source.name;
+        }
+        ui.conditionInfo.html = normalized?.key ? getConditionKeyEffectsHtml(normalized.key, normalized.meta) : '';
+        ui.conditionInfo.open = true;
+      },
+      statusPickerRequiresSource: () => {
+        const normalized = normalizeStatusInstance({ name: ui.statusPicker.selectedName, icon: ui.statusPicker.icon, rounds: ui.statusPicker.rounds });
+        return !!getConditionDefinition(normalized?.key)?.requiresSource;
+      },
     };
   }
 }).mount('#app');

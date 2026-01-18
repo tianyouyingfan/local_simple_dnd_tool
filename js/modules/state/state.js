@@ -61,6 +61,48 @@ export const statusCatalog = ref([{
 }, {
     name: '恐慌 Frightened',
     icon: '😱'
+}, {
+    name: '耳聋 Deafened',
+    icon: '🔇'
+}, {
+    name: '擒抱 Grappled',
+    icon: '🤼'
+}, {
+    name: '失能 Incapacitated',
+    icon: '⛔'
+}, {
+    name: '隐形 Invisible',
+    icon: '👻'
+}, {
+    name: '麻痹 Paralyzed',
+    icon: '🧊'
+}, {
+    name: '石化 Petrified',
+    icon: '🗿'
+}, {
+    name: '震慑 Stunned',
+    icon: '💫'
+}, {
+    name: '昏迷 Unconscious',
+    icon: '😴'
+}, {
+    name: '力竭 1级',
+    icon: '🥀'
+}, {
+    name: '力竭 2级',
+    icon: '🥀'
+}, {
+    name: '力竭 3级',
+    icon: '🥀'
+}, {
+    name: '力竭 4级',
+    icon: '🥀'
+}, {
+    name: '力竭 5级',
+    icon: '🥀'
+}, {
+    name: '力竭 6级',
+    icon: '🥀'
 },]);
 // 注意：battle 状态的持久化在 main.js 中处理（带节流和错误处理）
 export const ui = reactive({
@@ -106,6 +148,14 @@ export const ui = reactive({
         ability: '',
         callback: null
     },
+    binaryPrompt: {
+        open: false,
+        title: '',
+        message: '',
+        yesText: '是',
+        noText: '否',
+        callback: null
+    },
     // 在这里添加新的对象
     saveOutcomePicker: {
         open: false,
@@ -113,7 +163,8 @@ export const ui = reactive({
         targets: [], // 存储目标对象
         action: null, // 存储动作详情
         damages: [], // 存储已掷骰的伤害结果 [{ amount: 15, type: '火焰' }]
-        outcomes: {} // 存储每个目标的豁免结果 { targetUid: 'fail' | 'half' | 'zero' }
+        outcomes: {}, // 存储每个目标的豁免结果 { targetUid: 'fail' | 'half' | 'zero' }
+        autoFailTargets: {} // { targetUid: true }
     },
     abilityEditor: {
         open: false,
@@ -134,7 +185,19 @@ export const ui = reactive({
         targetUid: null,
         selectedName: '束缚 Restrained',
         rounds: 3,
-        icon: '⛓️'
+        icon: '⛓️',
+        sourceUid: null
+    },
+    conditionInfo: {
+        open: false,
+        targetUid: null,
+        statusId: null,
+        key: null,
+        title: '',
+        icon: '',
+        html: '',
+        automationLevel: 'full',
+        sourceName: ''
     },
     addParticipants: {
         open: false,
