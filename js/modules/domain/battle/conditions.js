@@ -430,7 +430,7 @@ export function getTargetBadges(actor, target, action, dmRollMode) {
     if (!selectable) {
       suffix = { text: '无法选中', tone: 'danger' };
     } else {
-      const mode = dmRollMode && dmRollMode !== 'normal' ? dmRollMode : getAutoAttackRollMode(actor, target);
+      const mode = dmRollMode && dmRollMode !== 'auto' ? dmRollMode : getAutoAttackRollMode(actor, target);
       if (mode === 'adv') suffix = { text: '优势', tone: 'ok' };
       else if (mode === 'dis') suffix = { text: '劣势', tone: 'danger' };
     }

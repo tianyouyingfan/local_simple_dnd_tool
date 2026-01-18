@@ -225,7 +225,7 @@ export const ui = reactive({
     },
     actionOnCooldown: false,
     selectedAction: null,
-    rollMode: 'normal',
+    rollMode: 'auto',
     autoApplyDamage: true,
     selectedTargets: [],
     log: '',

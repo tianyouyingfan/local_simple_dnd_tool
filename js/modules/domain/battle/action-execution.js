@@ -112,7 +112,7 @@ export async function runAction() {
             }
 
             let rollMode = ui.rollMode;
-            if (rollMode === 'normal') {
+            if (rollMode === 'auto') {
                 const flags = getAttackRollFlags(actor, t);
                 let { hasAdv, hasDis } = flags;
 
@@ -129,6 +129,7 @@ export async function runAction() {
                 if (hasAdv && hasDis) rollMode = 'normal';
                 else if (hasAdv) rollMode = 'adv';
                 else if (hasDis) rollMode = 'dis';
+                else rollMode = 'normal';
             }
 
             const d20 = rollD20(rollMode);

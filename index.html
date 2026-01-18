@@ -267,9 +267,10 @@
                                         <div class="section-title">自动化攻击流程</div>
                                         <span class="pill">DM强制</span>
                                         <select class="input" v-model="ui.rollMode" title="覆盖系统自动计算的优势/劣势">
-                                            <option value="normal">自动</option>
+                                            <option value="auto">自动</option>
                                             <option value="adv">强制优势</option>
                                             <option value="dis">强制劣势</option>
+                                            <option value="normal">强制普通</option>
                                         </select>
                                         <span class="pill">自动扣血</span>
                                         <input type="checkbox" v-model="ui.autoApplyDamage">
