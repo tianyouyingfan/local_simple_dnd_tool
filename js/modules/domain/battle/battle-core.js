@@ -10,6 +10,29 @@ import { CONDITION_KEYS, getExhaustionLevel } from 'conditions';
 
 const { toast } = useToasts();
 
+function ensureUniqueParticipantName(participant) {
+    const desiredName = (participant?.name || '').trim();
+    if (!desiredName) return;
+
+    const existingNames = new Set((battle.participants || []).map(p => p?.name).filter(Boolean));
+    if (!existingNames.has(desiredName)) return;
+
+    const match = desiredName.match(/^(.*)\s+#(\d+)$/);
+    const baseName = (match ? match[1] : desiredName).trim();
+    if (!baseName) return;
+
+    let nextIndex = match ? (Number(match[2]) + 1) : 1;
+    if (!Number.isFinite(nextIndex) || nextIndex < 1) nextIndex = 1;
+
+    let candidate = `${baseName} #${nextIndex}`;
+    while (existingNames.has(candidate)) {
+        nextIndex++;
+        candidate = `${baseName} #${nextIndex}`;
+    }
+
+    participant.name = candidate;
+}
+
 export function standardizeToParticipant(x) {
     const uid = crypto.randomUUID();
     const isPc = !!x.hpMax;
@@ -40,6 +63,7 @@ export function standardizeToParticipant(x) {
 }
 
 export function addParticipantAndProcessInitiative(participant) {
+    ensureUniqueParticipantName(participant);
     const inProgress = battle.participants.length > 0 && battle.participants[0].initiative !== null;
 
     if (!inProgress) {
@@ -106,8 +130,8 @@ export async function resetBattle() {
     localStorage.removeItem('dnd-battle-state');
     ui.log = '战斗已初始化。';
 
-    monsters.value.filter(m => m.isDefault).forEach(m => battle.participants.push(standardizeToParticipant(m)));
-    pcs.value.filter(pc => pc.isDefault).forEach(pc => battle.participants.push(standardizeToParticipant(pc)));
+    monsters.value.filter(m => m.isDefault).forEach(m => addParticipantAndProcessInitiative(standardizeToParticipant(m)));
+    pcs.value.filter(pc => pc.isDefault).forEach(pc => addParticipantAndProcessInitiative(standardizeToParticipant(pc)));
 
     toast(`初始化完成，已自动加入 ${battle.participants.length} 个默认单位。`);
 }
