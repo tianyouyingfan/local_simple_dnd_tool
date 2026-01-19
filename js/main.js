@@ -108,11 +108,12 @@ createApp({
       const normalized = normalizeStatusInstance({ name: newName, icon: ui.statusPicker.icon, rounds: ui.statusPicker.rounds });
       const def = getConditionDefinition(normalized?.key);
       if (def?.requiresSource) {
-        const fallback = currentActor.value?.uid;
-        ui.statusPicker.sourceUid = fallback && fallback !== ui.statusPicker.targetUid ? fallback : null;
-      } else {
-        ui.statusPicker.sourceUid = null;
+        toast('不可直接添加有施加状态源的状态');
+        ui.statusPicker.blocked = true;
+        return;
       }
+      ui.statusPicker.blocked = false;
+      ui.statusPicker.sourceUid = null;
     });
 
     watch(route, (newRoute, oldRoute) => {

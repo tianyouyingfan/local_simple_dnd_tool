@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dnd-assist-v0.5.3-condition-system';
+const CACHE_NAME = 'dnd-assist-v0.5.4-condition-system';
 
 const urlsToCache = [
   '/',
@@ -58,6 +58,7 @@ const LEGACY_MODULE_ALIASES = {
 };
 
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
@@ -66,20 +67,38 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
-      );
-    })
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name)));
+      await self.clients.claim();
+    })()
   );
 });
 
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+async function networkFirst(request, cacheKey = request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(cacheKey, response.clone());
+    }
+    return response;
+  } catch (_) {
+    return cache.match(cacheKey);
+  }
+}
+
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
   const isIndex = url.pathname === '/' || url.pathname.endsWith('/index.html');
   if (event.request.mode === 'navigate' || isIndex) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      networkFirst(event.request)
     );
     return;
   }
@@ -87,12 +106,12 @@ self.addEventListener('fetch', event => {
   const alias = LEGACY_MODULE_ALIASES[url.pathname];
   if (alias) {
     event.respondWith(
-      caches.match(alias).then(response => response || fetch(alias))
+      networkFirst(alias, alias)
     );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    networkFirst(event.request)
   );
 });

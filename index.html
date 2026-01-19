@@ -57,8 +57,8 @@
                     <div class="card" v-for="m in filteredMonsters" :key="m.id">
                         <div class="row">
                             <div class="avatar">
-                                <img v-if="m.avatar" :src="m.avatar" alt="Avatar">
-                                <span v-else>🧟</span>
+                                <img v-if="typeof m.avatar === 'string' && (m.avatar.startsWith('data:') || m.avatar.startsWith('blob:') || m.avatar.startsWith('http://') || m.avatar.startsWith('https://') || m.avatar.startsWith('/') || m.avatar.startsWith('./') || m.avatar.startsWith('../'))" :src="m.avatar" alt="Avatar">
+                                <span v-else>{{ typeof m.avatar === 'string' && m.avatar ? m.avatar : '🧟' }}</span>
                             </div>
                             <div class="title">{{m.name}}</div>
                             <span class="pill right mono">CR {{m.cr}}</span>
@@ -90,8 +90,8 @@
                     <div class="card" v-for="pc in pcs" :key="pc.id">
                         <div class="row">
                             <div class="avatar">
-                                <img v-if="pc.avatar" :src="pc.avatar" alt="Avatar">
-                                <span v-else>🧝</span>
+                                <img v-if="typeof pc.avatar === 'string' && (pc.avatar.startsWith('data:') || pc.avatar.startsWith('blob:') || pc.avatar.startsWith('http://') || pc.avatar.startsWith('https://') || pc.avatar.startsWith('/') || pc.avatar.startsWith('./') || pc.avatar.startsWith('../'))" :src="pc.avatar" alt="Avatar">
+                                <span v-else>{{ typeof pc.avatar === 'string' && pc.avatar ? pc.avatar : '🧝' }}</span>
                             </div>
                             <div class="title">{{pc.name}}</div>
                             <span class="pill right">AC {{pc.ac}}</span>
@@ -354,8 +354,8 @@
                             </div>
                             <div class="row">
                                 <div class="avatar">
-                                    <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
-                                    <span v-else>🎯</span>
+                                    <img v-if="typeof p.avatar === 'string' && (p.avatar.startsWith('data:') || p.avatar.startsWith('blob:') || p.avatar.startsWith('http://') || p.avatar.startsWith('https://') || p.avatar.startsWith('/') || p.avatar.startsWith('./') || p.avatar.startsWith('../'))" :src="p.avatar" alt="Avatar">
+                                    <span v-else>{{ typeof p.avatar === 'string' && p.avatar ? p.avatar : '🎯' }}</span>
                                 </div>
                                 <button class="btn small" @click="setCurrentActor(p.uid)">设为当前</button>
                                 <button class="btn small" @click="removeParticipant(p.uid)">移除</button>
@@ -371,8 +371,8 @@
                             draggable="true" @dragstart="onDragStart(idx)" @drop="onDrop(idx)">
                             <div class="drag-handle" title="拖拽调整顺序">⠿</div>
                             <div class="avatar">
-                                <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
-                                <span v-else>🎯</span>
+                                <img v-if="typeof p.avatar === 'string' && (p.avatar.startsWith('data:') || p.avatar.startsWith('blob:') || p.avatar.startsWith('http://') || p.avatar.startsWith('https://') || p.avatar.startsWith('/') || p.avatar.startsWith('./') || p.avatar.startsWith('../'))" :src="p.avatar" alt="Avatar">
+                                <span v-else>{{ typeof p.avatar === 'string' && p.avatar ? p.avatar : '🎯' }}</span>
                             </div>
                             <div class="compact-tile-name">{{ p.name }}</div>
                             <div class="spacer"></div>
@@ -400,8 +400,8 @@
                                 <div class="actor-header">
                                     <div class="avatar" style="width:40px;height:40px;font-size:20px; cursor: pointer;"
                                         @click="openActorViewer(currentActor)">
-                                        <img v-if="currentActor.avatar" :src="currentActor.avatar" alt="Avatar">
-                                        <span v-else>🎯</span>
+                                        <img v-if="typeof currentActor.avatar === 'string' && (currentActor.avatar.startsWith('data:') || currentActor.avatar.startsWith('blob:') || currentActor.avatar.startsWith('http://') || currentActor.avatar.startsWith('https://') || currentActor.avatar.startsWith('/') || currentActor.avatar.startsWith('./') || currentActor.avatar.startsWith('../'))" :src="currentActor.avatar" alt="Avatar">
+                                        <span v-else>{{ typeof currentActor.avatar === 'string' && currentActor.avatar ? currentActor.avatar : '🎯' }}</span>
                                     </div>
                                     <div class="col">
                                         <div class="title" style="cursor: pointer;"
@@ -511,8 +511,8 @@
                                         <div class="row" style="width: 100%; align-items: center;">
                                             <div class="avatar" @click.stop="openQuickDamageEditor(p)"
                                                 style="cursor: pointer;">
-                                                <img v-if="p.avatar" :src="p.avatar" alt="Avatar">
-                                                <span v-else>🎯</span>
+                                                <img v-if="typeof p.avatar === 'string' && (p.avatar.startsWith('data:') || p.avatar.startsWith('blob:') || p.avatar.startsWith('http://') || p.avatar.startsWith('https://') || p.avatar.startsWith('/') || p.avatar.startsWith('./') || p.avatar.startsWith('../'))" :src="p.avatar" alt="Avatar">
+                                                <span v-else>{{ typeof p.avatar === 'string' && p.avatar ? p.avatar : '🎯' }}</span>
                                             </div>
                                             <div style="font-weight:700" @click.stop="openQuickDamageEditor(p)"
                                                 style="cursor: pointer;">{{p.name}}</div>
@@ -601,9 +601,9 @@
                                     <div style="position: relative; z-index: 2; padding: 12px;">
                                         <div class="row">
                                             <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                                                <img v-if="ui.actorViewer.actor.avatar" :src="ui.actorViewer.actor.avatar" alt="Avatar"
+                                                <img v-if="typeof ui.actorViewer.actor.avatar === 'string' && (ui.actorViewer.actor.avatar.startsWith('data:') || ui.actorViewer.actor.avatar.startsWith('blob:') || ui.actorViewer.actor.avatar.startsWith('http://') || ui.actorViewer.actor.avatar.startsWith('https://') || ui.actorViewer.actor.avatar.startsWith('/') || ui.actorViewer.actor.avatar.startsWith('./') || ui.actorViewer.actor.avatar.startsWith('../'))" :src="ui.actorViewer.actor.avatar" alt="Avatar"
                                                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                                <span v-else>🧝</span>
+                                                <span v-else>{{ typeof ui.actorViewer.actor.avatar === 'string' && ui.actorViewer.actor.avatar ? ui.actorViewer.actor.avatar : '🧝' }}</span>
                                             </div>
                                             <div class="col">
                                                 <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
@@ -821,9 +821,9 @@
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
                                     <input type="file" ref="avatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
                                     <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;" @click="$refs.avatarUpload.click()">
-                                        <img v-if="uiState.monsterDraft.avatar" :src="uiState.monsterDraft.avatar" alt="Avatar"
+                                        <img v-if="typeof uiState.monsterDraft.avatar === 'string' && (uiState.monsterDraft.avatar.startsWith('data:') || uiState.monsterDraft.avatar.startsWith('blob:') || uiState.monsterDraft.avatar.startsWith('http://') || uiState.monsterDraft.avatar.startsWith('https://') || uiState.monsterDraft.avatar.startsWith('/') || uiState.monsterDraft.avatar.startsWith('./') || uiState.monsterDraft.avatar.startsWith('../'))" :src="uiState.monsterDraft.avatar" alt="Avatar"
                                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                        <span v-else>🧟</span>
+                                        <span v-else>{{ typeof uiState.monsterDraft.avatar === 'string' && uiState.monsterDraft.avatar ? uiState.monsterDraft.avatar : '🧟' }}</span>
                                     </div>
                                     <button class="btn small" @click="$refs.avatarUpload.click()">上传/更换头像</button>
                                 </div>
@@ -1336,9 +1336,9 @@
                                             <input type="file" ref="pcBgUpload" @change="onBgImageSelect" accept="image/*" hidden>
                                             <button class="btn" @click="$refs.pcBgUpload.click()">上传背景</button>
                                             <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                                                <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
+                                                <img v-if="typeof uiState.pcDraft.avatar === 'string' && (uiState.pcDraft.avatar.startsWith('data:') || uiState.pcDraft.avatar.startsWith('blob:') || uiState.pcDraft.avatar.startsWith('http://') || uiState.pcDraft.avatar.startsWith('https://') || uiState.pcDraft.avatar.startsWith('/') || uiState.pcDraft.avatar.startsWith('./') || uiState.pcDraft.avatar.startsWith('../'))" :src="uiState.pcDraft.avatar" alt="Avatar"
                                                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                                <span v-else>🧝</span>
+                                                <span v-else>{{ typeof uiState.pcDraft.avatar === 'string' && uiState.pcDraft.avatar ? uiState.pcDraft.avatar : '🧝' }}</span>
                                             </div>
                                             <div class="col">
                                                 <h2 style="margin: 0;">{{ uiState.pcDraft.name }}</h2>
@@ -1399,9 +1399,9 @@
                                     <input type="file" ref="pcAvatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
                                     <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;"
                                         @click="$refs.pcAvatarUpload.click()">
-                                        <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
+                                        <img v-if="typeof uiState.pcDraft.avatar === 'string' && (uiState.pcDraft.avatar.startsWith('data:') || uiState.pcDraft.avatar.startsWith('blob:') || uiState.pcDraft.avatar.startsWith('http://') || uiState.pcDraft.avatar.startsWith('https://') || uiState.pcDraft.avatar.startsWith('/') || uiState.pcDraft.avatar.startsWith('./') || uiState.pcDraft.avatar.startsWith('../'))" :src="uiState.pcDraft.avatar" alt="Avatar"
                                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                        <span v-else>🧝</span>
+                                        <span v-else>{{ typeof uiState.pcDraft.avatar === 'string' && uiState.pcDraft.avatar ? uiState.pcDraft.avatar : '🧝' }}</span>
                                     </div>
                                     <button class="btn small" @click="$refs.pcAvatarUpload.click()">上传/更换头像</button>
                                 </div>
@@ -1919,14 +1919,14 @@
                     </select>
                     <select v-if="statusPickerRequiresSource()" class="input" v-model="ui.statusPicker.sourceUid" style="min-width: 180px;">
                         <option :value="null">选择来源生物</option>
-                        <option v-for="p in battle.participants" :key="p.uid" :value="p.uid" v-if="p.uid !== ui.statusPicker.targetUid">
-                            {{ p.name }}
-                        </option>
+                        <template v-for="p in battle.participants" :key="p.uid">
+                            <option v-if="p.uid !== ui.statusPicker.targetUid" :value="p.uid">{{ p.name }}</option>
+                        </template>
                     </select>
                     <input type="number" class="input" style="width:120px" v-model.number="ui.statusPicker.rounds"
                         placeholder="持续回合数">
                     <input class="input" style="width:120px" v-model="ui.statusPicker.icon" placeholder="图标(emoji 可)">
-                    <button class="btn ok" @click="applyStatus()">应用</button>
+                    <button class="btn ok" @click="applyStatus()" :disabled="ui.statusPicker.blocked">应用</button>
                 </div>
                 <div class="ok-zone small" style="margin-top:8px">
                     已支持自动追踪状态时长，每到回合开始自动 -1，至 0 自动移除。也可手动移除或调整。
@@ -2236,8 +2236,8 @@
                     <div v-for="target in ui.saveOutcomePicker.targets" :key="target.uid" class="card">
                         <div class="row">
                             <div class="avatar">
-                                <img v-if="target.avatar" :src="target.avatar" :alt="target.name">
-                                <span v-else>🎯</span>
+                                <img v-if="typeof target.avatar === 'string' && (target.avatar.startsWith('data:') || target.avatar.startsWith('blob:') || target.avatar.startsWith('http://') || target.avatar.startsWith('https://') || target.avatar.startsWith('/') || target.avatar.startsWith('./') || target.avatar.startsWith('../'))" :src="target.avatar" :alt="target.name">
+                                <span v-else>{{ typeof target.avatar === 'string' && target.avatar ? target.avatar : '🎯' }}</span>
                             </div>
                             <strong style="margin-left: 8px;">{{ target.name }}</strong>
                             <span v-if="ui.saveOutcomePicker.autoFailTargets[target.uid]" class="badge ok" style="margin-left: 8px;">豁免自动失败</span>

@@ -186,7 +186,8 @@ export const ui = reactive({
         selectedName: '束缚 Restrained',
         rounds: 3,
         icon: '⛓️',
-        sourceUid: null
+        sourceUid: null,
+        blocked: false
     },
     conditionInfo: {
         open: false,

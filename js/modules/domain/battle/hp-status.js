@@ -112,15 +112,23 @@ export function openHPEditor(participant) {
 export function openStatusPicker(target) {
     ui.statusPicker.open = true;
     ui.statusPicker.targetUid = target.uid;
+    ui.statusPicker.blocked = false;
     const fallback = currentActor.value?.uid;
     ui.statusPicker.sourceUid = fallback && fallback !== target.uid ? fallback : null;
     if (statusCatalog.value.length > 0) {
-        ui.statusPicker.selectedName = statusCatalog.value[0].name;
-        ui.statusPicker.icon = statusCatalog.value[0].icon;
+        const firstNonSource = statusCatalog.value.find(s => {
+            const inst = normalizeStatusInstance({ name: s.name, icon: s.icon, rounds: 1 });
+            const def = getConditionDefinition(inst?.key);
+            return !def?.requiresSource;
+        });
+        const picked = firstNonSource || statusCatalog.value[0];
+        ui.statusPicker.selectedName = picked.name;
+        ui.statusPicker.icon = picked.icon;
     }
 }
 
 export function applyStatus() {
+    if (ui.statusPicker.blocked) return toast('不可直接添加有施加状态源的状态');
     const t = battle.participants.find(p => p.uid === ui.statusPicker.targetUid);
     if (!t) return;
     const instance = normalizeStatusInstance({
@@ -131,7 +139,7 @@ export function applyStatus() {
     });
     if (!instance?.key) return toast('该状态暂不支持（缺少状态定义）');
     const def = getConditionDefinition(instance.key);
-    if (def?.requiresSource && !instance.sourceUid) return toast('该状态需要选择来源生物');
+    if (def?.requiresSource) return toast('不可直接添加有施加状态源的状态');
 
     if (instance.key === CONDITION_KEYS.EXHAUSTION) {
         const prevLevel = getExhaustionLevel(t) || 0;
