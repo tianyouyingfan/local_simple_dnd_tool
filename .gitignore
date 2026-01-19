@@ -36,6 +36,7 @@ lerna-debug.log*
 *.sln
 *.swp
 *.swo
+.claude/
 
 # OS
 .DS_Store
