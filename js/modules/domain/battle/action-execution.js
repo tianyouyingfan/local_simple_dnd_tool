@@ -3,9 +3,9 @@
  */
 import { nextTick } from 'vue';
 import { battle, ui, uiState, currentActor, statusCatalog } from 'state'; // 导入 currentActor
-import { deepClone, rollD20, rollDamage, rollDamageWithDetails, clamp } from 'utils';
+import { deepClone, rollD20, rollDamage, rollDamageWithDetails } from 'utils';
 import { useToasts } from 'use-toasts';
-import { applyHPDelta } from 'hp-status';
+import { applyExhaustionHpCap, applyHPDelta, checkExhaustion6Death } from 'hp-status';
 import { selectNone } from 'targeting';
 import {
     CONDITION_KEYS,
@@ -13,6 +13,7 @@ import {
     collectBeforeAttackPrompts,
     getAttackRollFlags,
     getConditionDefinition,
+    getExhaustionLevel,
     getStatusIdentity,
     hasCondition,
     isActorIncapacitated,
@@ -86,8 +87,6 @@ export function formatRolledDamages(rolledDamages) {
 
 export async function runAction() {
     if (ui.actionOnCooldown) return;
-    ui.actionOnCooldown = true;
-    setTimeout(() => { ui.actionOnCooldown = false; }, 5000);
 
     const actor = currentActor.value;
     const action = ui.selectedAction;
@@ -101,6 +100,9 @@ export async function runAction() {
 
     const targets = battle.participants.filter(p => ui.selectedTargets.includes(p.uid));
     if (!targets.length) return toast('请先在右侧选择目标');
+
+    ui.actionOnCooldown = true;
+    setTimeout(() => { ui.actionOnCooldown = false; }, 5000);
 
     let log = `【${actor.name}】使用「${action.name}」对 ${targets.length} 个目标：\n`;
 
@@ -197,7 +199,7 @@ export async function runAction() {
                 log += ` 伤害: ${damageLogParts.join(' + ')} = 总计 ${totalFinalDamage} 伤害\n`;
 
                 if (ui.autoApplyDamage) {
-                    t.hpCurrent = clamp(t.hpCurrent - totalFinalDamage, 0, t.hpMax);
+                    applyHPDelta(t, -totalFinalDamage);
                     log += ` 已自动扣血：-${totalFinalDamage}，剩余HP ${t.hpCurrent}\n`;
                 } else {
                     log += ` （未自动扣血）\n`;
@@ -213,6 +215,25 @@ export async function runAction() {
                         });
                         const def = getConditionDefinition(instance?.key);
                         if (def?.requiresSource && !instance.sourceUid) instance.sourceUid = actor.uid;
+
+                        if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
+                            const prevLevel = getExhaustionLevel(t) || 0;
+                            const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
+                            if (existing) {
+                                const nextLevel = Number(instance.meta?.level) || prevLevel;
+                                existing.meta = { ...(existing.meta || {}) };
+                                existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
+                                existing.rounds = Math.max(Number(existing.rounds) || 1, Number(instance.rounds) || 1);
+                                existing.name = instance.name;
+                                existing.icon = instance.icon;
+                                applyExhaustionHpCap(t);
+                                if (prevLevel < 6 && existing.meta.level === 6) {
+                                    checkExhaustion6Death(t);
+                                }
+                                log += `  -> ${t.name} 力竭等级提升至 ${existing.meta.level}.\n`;
+                                return;
+                            }
+                        }
 
                         const identity = getStatusIdentity(instance).identity;
                         if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) return;
@@ -281,7 +302,7 @@ export async function runAction() {
     }
 
     if (action.recharge > 0) {
-        const actorAction = actor.actions.find(a => a.name === action.name);
+        const actorAction = actor.actions.find(a => (action.id && a.id === action.id) || a.name === action.name);
         if (actorAction) {
             actorAction.cooldown = action.recharge;
             ui.log += `\n「${action.name}」进入冷却，${action.recharge}回合后可用。`;

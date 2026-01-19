@@ -317,12 +317,16 @@ export function normalizeStatusInstance(raw) {
     const parsed = parseExhaustionFromName(raw.name);
     if (parsed?.level) meta.level = parsed.level;
   }
+  let rounds = Number(raw.rounds ?? 1);
+  if (!Number.isFinite(rounds)) rounds = 1;
+  rounds = Math.floor(rounds);
+  if (rounds < 1) rounds = 1;
   return {
     id: raw.id || crypto.randomUUID(),
     key,
     name: raw.name || (key ? conditionDefinitions[key]?.displayName : ''),
     icon,
-    rounds: raw.rounds ?? 1,
+    rounds,
     sourceUid: raw.sourceUid ?? null,
     meta,
   };

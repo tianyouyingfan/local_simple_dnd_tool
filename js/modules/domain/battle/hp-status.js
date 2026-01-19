@@ -128,6 +128,25 @@ export function applyStatus() {
     const def = getConditionDefinition(instance.key);
     if (def?.requiresSource && !instance.sourceUid) return toast('该状态需要选择来源生物');
 
+    if (instance.key === CONDITION_KEYS.EXHAUSTION) {
+        const prevLevel = getExhaustionLevel(t) || 0;
+        const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
+        if (existing) {
+            const nextLevel = Number(instance.meta?.level) || prevLevel;
+            existing.meta = { ...(existing.meta || {}) };
+            existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
+            existing.rounds = Math.max(Number(existing.rounds) || 1, Number(instance.rounds) || 1);
+            existing.name = instance.name;
+            existing.icon = instance.icon;
+            ui.statusPicker.open = false;
+            applyExhaustionHpCap(t);
+            if (prevLevel < 6 && existing.meta.level === 6) {
+                checkExhaustion6Death(t);
+            }
+            return;
+        }
+    }
+
     const identity = getStatusIdentity(instance).identity;
     if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) {
         ui.statusPicker.open = false;

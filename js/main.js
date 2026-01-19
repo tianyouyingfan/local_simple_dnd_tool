@@ -40,7 +40,7 @@ import {
 } from 'battle-core';
 import {
   applyHPDelta, setTempHp, closeQuickDamageEditor, openQuickDamageEditor, applyQuickDamage, openHPEditor,
-  openStatusPicker, applyStatus, removeStatus, confirmExhaustionDeath
+  applyExhaustionHpCap, openStatusPicker, applyStatus, removeStatus, confirmExhaustionDeath
 } from 'hp-status';
 import {
   toggleTarget, toggleSelectGroup, selectNone
@@ -125,6 +125,7 @@ createApp({
 
     // 3. Initialize
     (async function initializeApp() {
+      const pendingBaseMaxHpFixUids = [];
       try {
         const saved = localStorage.getItem('dnd-battle-state');
         if (saved) {
@@ -134,7 +135,11 @@ createApp({
             if (!Array.isArray(p.statuses)) p.statuses = [];
             p.statuses = p.statuses.map(normalizeStatusInstance).filter(Boolean);
             // M1迁移: 为旧存档补充baseMaxHp字段
-            if (p.baseMaxHp == null) p.baseMaxHp = p.hpMax;
+            if (p.baseMaxHp == null) {
+              p.baseMaxHp = p.hpMax;
+              pendingBaseMaxHpFixUids.push(p.uid);
+            }
+            applyExhaustionHpCap(p);
           }
         }
       } catch (e) {
@@ -143,6 +148,22 @@ createApp({
       }
       await seedIfEmpty();
       await loadAll();
+
+      if (pendingBaseMaxHpFixUids.length) {
+        for (const uid of pendingBaseMaxHpFixUids) {
+          const p = battle.participants.find(x => x.uid === uid);
+          if (!p || !p.baseId) continue;
+          const source = p.type === 'pc'
+            ? pcs.value.find(x => x.id === p.baseId)
+            : monsters.value.find(x => x.id === p.baseId);
+          if (!source) continue;
+          const candidate = source.hpMax ?? source.hp?.average;
+          if (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0) {
+            p.baseMaxHp = candidate;
+            applyExhaustionHpCap(p);
+          }
+        }
+      }
     })();
 
     // 4. Keyboard Shortcuts

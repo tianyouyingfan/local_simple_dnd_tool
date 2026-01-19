@@ -1,18 +1,19 @@
 /**
  * 战斗核心逻辑模块
  */
-import { nextTick } from 'vue';
 import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from 'state';
 import { deepClone, rollSingleInitiative } from 'utils';
 import { sortParticipantsByInitiative } from 'helpers';
 import { useToasts } from 'use-toasts';
+import { applyExhaustionHpCap } from 'hp-status';
+import { getExhaustionLevel } from 'conditions';
 
 const { toast } = useToasts();
 
 export function standardizeToParticipant(x) {
     const uid = crypto.randomUUID();
     const isPc = !!x.hpMax;
-    const resolvedHpMax = x.hpMax || x.hp?.average || 10;
+    const resolvedHpMax = x.hpMax ?? x.hp?.average ?? 10;
     return {
         uid,
         baseId: x.id || null,
@@ -20,9 +21,9 @@ export function standardizeToParticipant(x) {
         type: isPc ? 'pc' : 'monster',
         avatar: x.avatar || (x.type?.includes?.('dragon') ? '🐲' : (isPc ? '🧝' : '👾')),
         ac: x.ac || 12,
-        baseMaxHp: x.baseMaxHp || resolvedHpMax,
+        baseMaxHp: x.baseMaxHp ?? resolvedHpMax,
         hpMax: resolvedHpMax,
-        hpCurrent: x.hpCurrent || x.hp?.average || 10,
+        hpCurrent: x.hpCurrent ?? x.hp?.average ?? 10,
         abilities: x.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
         resistances: deepClone(x.resistances || { damage: [], conditions: [] }),
         vulnerabilities: deepClone(x.vulnerabilities || { damage: [], conditions: [] }),
@@ -128,9 +129,14 @@ export function setCurrentActor(uid) {
 }
 
 export function decrementParticipantStatuses(participant) {
+    const prevExhaustion = getExhaustionLevel(participant);
     participant.statuses = participant.statuses
         .map(s => ({ ...s, rounds: s.rounds - 1 }))
         .filter(s => s.rounds > 0);
+    const nextExhaustion = getExhaustionLevel(participant);
+    if (prevExhaustion !== nextExhaustion) {
+        applyExhaustionHpCap(participant);
+    }
 }
 
 export function decrementActionCooldowns(participant) {
