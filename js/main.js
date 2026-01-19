@@ -26,8 +26,8 @@ import {
   openActionsViewer, selectActionFromViewer
 } from 'actor-viewer';
 import {
-  openMonsterEditor, updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster,
-  openPCEditor, savePC, deletePC,
+  openMonsterEditor, closeMonsterEditor, updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster,
+  openPCEditor, closePCEditor, savePC, deletePC,
   openAbilityPool, openAbilityEditor, saveAbility, deleteAbility, attachAbilityToDraft,
   openActionPool, attachActionToDraft,
   openActionEditor, openActionEditorForDraft, saveAction, addDamageToActionDraft, deleteAction
@@ -226,8 +226,8 @@ createApp({
 
       openActorViewer, startActorViewerEdit, cancelActorViewerEdit, saveActorViewerChanges,
 
-      openMonsterEditor, updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster,
-      openPCEditor, savePC, deletePC,
+      openMonsterEditor, closeMonsterEditor, updateMonster, saveMonsterAsNew, duplicateMonster, deleteMonster,
+      openPCEditor, closePCEditor, savePC, deletePC,
 
       openAbilityPool, openAbilityEditor, saveAbility, deleteAbility, attachAbilityToDraft,
       openActionPool, attachActionToDraft, openActionsViewer,

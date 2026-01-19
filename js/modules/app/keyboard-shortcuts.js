@@ -7,7 +7,7 @@ import { openQuickDice } from 'quick-dice';
 import { nextTurn, prevTurn } from 'battle-core';
 import { ui, uiState } from 'state';
 import { cancelActorViewerEdit, saveActorViewerChanges } from 'actor-viewer';
-import { saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
+import { closeMonsterEditor, closePCEditor, saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
 
 export function setupKeyboardShortcuts() {
     let lastD = 0, lastR = 0, lastL = 0;
@@ -60,8 +60,8 @@ export function setupKeyboardShortcuts() {
     const closeEditorContextNoSave = () => {
         if (ui.actionEditor.open) { ui.actionEditor.open = false; return; }
         if (ui.abilityEditor.open) { ui.abilityEditor.open = false; return; }
-        if (ui.monsterEditor.open) { ui.monsterEditor.open = false; return; }
-        if (ui.pcEditor.open) { ui.pcEditor.open = false; return; }
+        if (ui.monsterEditor.open) { closeMonsterEditor(); return; }
+        if (ui.pcEditor.open) { closePCEditor(); return; }
         if (ui.actorViewer.open) {
             cancelActorViewerEdit();
             ui.actorViewer.open = false;

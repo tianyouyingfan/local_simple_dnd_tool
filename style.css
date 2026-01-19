@@ -419,6 +419,121 @@ summary.section-title {
     overflow: auto
 }
 
+.split-page {
+    display: grid;
+    grid-template-columns: minmax(320px, 420px) 1fr;
+    gap: 12px;
+    min-height: calc(100vh - 84px);
+    align-items: start
+}
+
+.split-page.three {
+    grid-template-columns: minmax(320px, 420px) 1fr minmax(360px, 520px)
+}
+
+.split-pane {
+    background: var(--panel);
+    border: 1px solid #2a2e34;
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0
+}
+
+.split-pane-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(21, 23, 26, .98), rgba(21, 23, 26, .9));
+    border-bottom: 1px solid #2a2e34
+}
+
+.split-pane-body {
+    padding: 12px;
+    overflow: auto;
+    min-height: 0
+}
+
+.workspace-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column
+}
+
+.workspace-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(18, 20, 23, .98), rgba(18, 20, 23, .9));
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #23262a
+}
+
+.workspace-title {
+    font-weight: 800;
+    letter-spacing: .2px
+}
+
+.workspace-body {
+    flex: 1;
+    min-height: 0;
+    padding: 12px 16px;
+    overflow: hidden
+}
+
+.workspace-grid {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr minmax(360px, 520px);
+    gap: 12px;
+    min-height: 0
+}
+
+.workspace-pane {
+    background: var(--panel);
+    border: 1px solid #2a2e34;
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0
+}
+
+.workspace-pane-body {
+    padding: 12px;
+    overflow: auto;
+    min-height: 0
+}
+
+.workspace-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap
+}
+
+.workspace-tab {
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #c9ccd1;
+    border: 1px solid transparent
+}
+
+.workspace-tab.active {
+    background: #28313a;
+    border-color: #3b4653;
+    color: #e8eaed
+}
+
 .actor-header {
     display: flex;
     gap: 12px;

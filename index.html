@@ -114,27 +114,188 @@
 
             <!-- 动作库 -->
             <section v-if="route==='actions'">
-                <div class="toolbar">
-                    <button class="btn" @click="openActionEditor()">+ 新建动作</button>
-                </div>
-                <div class="grid cards">
-                    <div class="card" v-for="action in actions" :key="action.id">
-                        <div class="row">
-                            <div class="title">{{action.name}}</div>
-                            <span class="pill right">{{action.type}}</span>
-                        </div>
-                        <div class="kpi muted small" style="margin-top:6px">
-                            <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
-                            <span class="pill" v-if="action.range">距离: {{action.range}}</span>
-                            <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
-                            <span class="pill" v-if="action.range">距离: {{action.range}}</span>
-                            <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
-                        </div>
-                        <div class="hl"></div>
-                        <div class="row">
-                            <button class="btn" @click="openActionEditor(action)">编辑</button>
+                <div class="split-page">
+                    <div class="split-pane">
+                        <div class="split-pane-header">
+                            <div class="title">动作库</div>
                             <div class="spacer"></div>
-                            <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                            <button class="btn" @click="openActionEditor()">+ 新建动作</button>
+                        </div>
+                        <div class="split-pane-body">
+                            <div class="grid cards">
+                                <div class="card" v-for="action in actions" :key="action.id">
+                                    <div class="row">
+                                        <div class="title">{{action.name}}</div>
+                                        <span class="pill right">{{action.type}}</span>
+                                    </div>
+                                    <div class="kpi muted small" style="margin-top:6px">
+                                        <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                                        <span class="pill" v-if="action.range">距离: {{action.range}}</span>
+                                        <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                        <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                                    </div>
+                                    <div class="hl"></div>
+                                    <div class="row">
+                                        <button class="btn" @click="openActionEditor(action)">编辑</button>
+                                        <div class="spacer"></div>
+                                        <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="split-pane">
+                        <div class="split-pane-header">
+                            <div class="title">编辑动作</div>
+                            <div class="spacer"></div>
+                            <button class="btn" v-if="ui.actionEditor.open" @click="ui.actionEditor.open=false">关闭</button>
+                        </div>
+                        <div class="split-pane-body">
+                            <div v-if="ui.actionEditor.open">
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label>动作名称</label>
+                                            <input class="input" style="min-width:160px" v-model="uiState.actionDraft.name"
+                                                placeholder="动作名称" />
+                                        </div>
+                                        <div class="col">
+                                            <label>类型</label>
+                                            <select class="input" v-model="uiState.actionDraft.type">
+                                                <option value="attack">攻击检定</option>
+                                                <option value="save">豁免检定</option>
+                                                <option value="utility">其他</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="hl"></div>
+                                    <div class="row small" style="gap:12px">
+                                        <template v-if="uiState.actionDraft.type==='attack'">
+                                            <div class="col">
+                                                <label>攻击加值</label>
+                                                <input type="number" class="input" style="width:90px"
+                                                    v-model.number="uiState.actionDraft.attackBonus" />
+                                            </div>
+                                            <div class="col">
+                                                <label>攻击距离</label>
+                                                <input class="input" style="width:90px" v-model="uiState.actionDraft.range"
+                                                    placeholder="例如 5 ft." />
+                                            </div>
+                                            <div class="col" style="grid-column: span 2;">
+                                                <div class="row">
+                                                    <label>多段伤害</label>
+                                                    <div class="spacer"></div>
+                                                    <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                </div>
+                                                <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row"
+                                                    style="margin-top: 4px;">
+                                                    <input class="input mono" style="width:120px" v-model="damage.dice"
+                                                        placeholder="例如 2d6+3" />
+                                                    <select class="input" v-model="damage.type">
+                                                        <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                    </select>
+                                                    <button v-if="index > 0" class="btn danger small"
+                                                        @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <label>充能回合</label>
+                                                <input type="number" class="input" style="width:90px"
+                                                    v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                            </div>
+                                            <div class="col">
+                                                <label>命中附加状态</label>
+                                                <select class="input" v-model="uiState.actionDraft.onHitStatus">
+                                                    <option value="">无</option>
+                                                    <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
+                                                </select>
+                                                <div v-if="uiState.actionDraft.onHitStatus" class="form-row">
+                                                    <label>
+                                                        豁免属性:
+                                                        <select v-model="uiState.actionDraft.onHitSaveAbility">
+                                                            <option value="str">力量 (Strength)</option>
+                                                            <option value="dex">敏捷 (Dexterity)</option>
+                                                            <option value="con">体质 (Constitution)</option>
+                                                            <option value="int">智力 (Intelligence)</option>
+                                                            <option value="wis">感知 (Wisdom)</option>
+                                                            <option value="cha">魅力 (Charisma)</option>
+                                                        </select>
+                                                    </label>
+                                                    <label>
+                                                        豁免DC:
+                                                        <input type="number" v-model.number="uiState.actionDraft.onHitSaveDC"
+                                                            style="width: 60px;">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col" v-if="uiState.actionDraft.onHitStatus">
+                                                <label>状态持续回合</label>
+                                                <input type="number" class="input" style="width:90px"
+                                                    v-model.number="uiState.actionDraft.onHitStatusRounds" placeholder="默认1" />
+                                            </div>
+                                        </template>
+                                        <template v-else-if="uiState.actionDraft.type==='save'">
+                                            <div class="col">
+                                                <label>豁免属性</label>
+                                                <select class="input" v-model="uiState.actionDraft.saveAbility">
+                                                    <option>str</option>
+                                                    <option>dex</option>
+                                                    <option>con</option>
+                                                    <option>int</option>
+                                                    <option>wis</option>
+                                                    <option>cha</option>
+                                                </select>
+                                            </div>
+                                            <div class="col">
+                                                <label>DC</label>
+                                                <input type="number" class="input" style="width:90px"
+                                                    v-model.number="uiState.actionDraft.saveDC" />
+                                            </div>
+                                            <div class="col">
+                                                <label>攻击距离</label>
+                                                <input class="input" style="width:90px" v-model="uiState.actionDraft.range"
+                                                    placeholder="例如 30 ft." />
+                                            </div>
+                                            <div class="col" style="grid-column: span 2;">
+                                                <div class="row">
+                                                    <label>多段伤害</label>
+                                                    <div class="spacer"></div>
+                                                    <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                </div>
+                                                <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row"
+                                                    style="margin-top: 4px;">
+                                                    <input class="input mono" style="width:120px" v-model="damage.dice"
+                                                        placeholder="例如 2d6+3" />
+                                                    <select class="input" v-model="damage.type">
+                                                        <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                    </select>
+                                                    <button v-if="index > 0" class="btn danger small"
+                                                        @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                </div>
+                                            </div>
+                                            <div class="col">
+                                                <label>充能回合</label>
+                                                <input type="number" class="input" style="width:90px"
+                                                    v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                            </div>
+                                            <div class="col">
+                                                <label>成功是否半伤</label>
+                                                <select class="input" v-model="uiState.actionDraft.onSuccess">
+                                                    <option value="half">半伤</option>
+                                                    <option value="none">免疫</option>
+                                                </select>
+                                            </div>
+                                        </template>
+                                        <template v-else>
+                                            <span class="muted">实用动作，无自动结算</span>
+                                        </template>
+                                    </div>
+                                    <div class="hl"></div>
+                                    <button class="btn ok" @click="saveAction()">保存并关闭</button>
+                                </div>
+                            </div>
+                            <div v-else class="placeholder">选择一个动作或新建动作</div>
                         </div>
                     </div>
                 </div>
@@ -394,95 +555,141 @@
             </section>
         </main>
 
-        <!-- 模态：生物详情查看器 -->
-        <div class="modal-mask" v-if="ui.actorViewer.open">
-            <div class="modal" v-if="ui.actorViewer.actor">
-                <div class="row">
-                    <div class="title">生物详情</div>
-                    <div class="spacer"></div>
-                    <button class="btn" v-if="!ui.actorViewer.isEditing" @click="startActorViewerEdit">编辑</button>
-                    <button class="btn ok" v-if="ui.actorViewer.isEditing" @click="saveActorViewerChanges">保存</button>
-                    <button class="btn" v-if="ui.actorViewer.isEditing" @click="cancelActorViewerEdit">取消</button>
-                    <button class="btn" @click="ui.actorViewer.open=false">关闭</button>
-                </div>
-                <div class="hl"></div>
+        <!-- 全屏：生物详情查看器 -->
+        <div class="workspace-mask" v-if="ui.actorViewer.open && ui.actorViewer.actor">
+            <div class="workspace-header">
+                <div class="workspace-title">生物详情</div>
+                <div class="spacer"></div>
+                <button class="btn" v-if="!ui.actorViewer.isEditing" @click="startActorViewerEdit">编辑</button>
+                <button class="btn ok" v-if="ui.actorViewer.isEditing" @click="saveActorViewerChanges">保存</button>
+                <button class="btn" v-if="ui.actorViewer.isEditing" @click="cancelActorViewerEdit">取消</button>
+                <button class="btn" @click="ui.actorViewer.open=false">关闭</button>
+            </div>
+            <div class="workspace-body">
+                <div class="workspace-grid">
+                    <div class="workspace-pane">
+                        <div class="workspace-pane-body">
+                            <template v-if="ui.actorViewer.actor.type === 'pc'">
+                                <div class="monster-view-container" style="position: relative;">
+                                    <img v-if="ui.actorViewer.actor.backgroundImage" :src="ui.actorViewer.actor.backgroundImage"
+                                        style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                    <div style="position: relative; z-index: 2; padding: 12px;">
+                                        <div class="row">
+                                            <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
+                                                <img v-if="ui.actorViewer.actor.avatar" :src="ui.actorViewer.actor.avatar" alt="Avatar"
+                                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                                <span v-else>🧝</span>
+                                            </div>
+                                            <div class="col">
+                                                <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
+                                                <div class="kpi muted small" style="margin-top: 8px;">
+                                                    <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
+                                                    <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
+                                                    <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} / {{ui.actorViewer.actor.hpMax}}</span>
+                                                    <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> / <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="section-title">六大属性</div>
+                                        <div class="ability-grid">
+                                            <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
+                                                <div class="muted small">{{k.toUpperCase()}}</div>
+                                                <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                                <div v-else>
+                                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]">
+                                                    ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="three-col">
+                                            <div class="col">
+                                                <div class="section-title">伤害抗性</div>
+                                                <div class="muted small">{{ (ui.actorViewer.actor.resistances.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害易伤</div>
+                                                <div class="muted small">{{ (ui.actorViewer.actor.vulnerabilities.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害免疫</div>
+                                                <div class="muted small">{{ (ui.actorViewer.actor.immunities.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">状态免疫</div>
+                                                <div class="muted small">{{ (ui.actorViewer.actor.immunities.conditions || []).join(', ') || '无' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="section-title">特性</div>
+                                        <div class="muted small" style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{ ui.actorViewer.actor.features || '无' }}</div>
+                                    </div>
+                                </div>
+                            </template>
 
-                <!-- PC 查看模式 -->
-                <template v-if="ui.actorViewer.actor.type === 'pc'">
-                    <div class="monster-view-container" style="position: relative;">
-                        <!-- 背景图 -->
-                        <img v-if="ui.actorViewer.actor.backgroundImage" :src="ui.actorViewer.actor.backgroundImage"
-                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
-                        
-                        <!-- 内容容器 -->
-                        <div style="position: relative; z-index: 2; padding: 12px;">
-                            <div class="row">
-                                <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                                    <img v-if="ui.actorViewer.actor.avatar" :src="ui.actorViewer.actor.avatar" alt="Avatar"
-                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                    <span v-else>🧝</span>
-                                </div>
-                                <div class="col">
-                                    <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
-                                    <div class="kpi muted small" style="margin-top: 8px;">
-                                        <span class="pill" v-if="!ui.actorViewer.isEditing">AC
-                                            {{ui.actorViewer.actor.ac}}</span>
-                                        <span class="pill" v-else>AC <input type="number" class="inline-input"
-                                            v-model.number="ui.actorViewer.draft.ac"></span>
-                                        <span class="pill" v-if="!ui.actorViewer.isEditing">HP
-                                            {{ui.actorViewer.actor.hpCurrent}} /
-                                            {{ui.actorViewer.actor.hpMax}}</span>
-                                        <span class="pill" v-else>HP <input type="number" class="inline-input"
-                                            v-model.number="ui.actorViewer.draft.hpCurrent"> /
-                                            <input type="number" class="inline-input"
-                                            v-model.number="ui.actorViewer.draft.hpMax"></span>
+                            <template v-else>
+                                <div class="monster-view-container" style="position: relative;">
+                                    <img v-if="ui.actorViewer.actor.backgroundImage" :src="ui.actorViewer.actor.backgroundImage"
+                                        style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                    <div style="position: relative; z-index: 2; padding: 12px;">
+                                        <div class="row">
+                                            <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
+                                            <div class="spacer"></div>
+                                            <span class="pill mono">CR {{ui.actorViewer.actor.cr}}</span>
+                                        </div>
+                                        <div class="kpi muted small" style="margin-top: 8px;">
+                                            <span class="pill" v-if="!ui.actorViewer.isEditing">AC {{ui.actorViewer.actor.ac}}</span>
+                                            <span class="pill" v-else>AC <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.ac"></span>
+                                            <span class="pill" v-if="!ui.actorViewer.isEditing">HP {{ui.actorViewer.actor.hpCurrent}} / {{ui.actorViewer.actor.hpMax}}</span>
+                                            <span class="pill" v-else>HP <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpCurrent"> / <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.hpMax"></span>
+                                            <span class="pill" v-if="!ui.actorViewer.isEditing">速度 {{(ui.actorViewer.actor.speed && ui.actorViewer.actor.speed.walk) || '?'}}ft</span>
+                                            <span class="pill" v-else>速度 <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.speed.walk">ft</span>
+                                            <span class="pill">{{ (ui.actorViewer.actor.monsterType||[]).map(translateType).join(',') || '未分类' }}</span>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="section-title">六大属性</div>
+                                        <div class="ability-grid">
+                                            <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
+                                                <div class="muted small">{{k.toUpperCase()}}</div>
+                                                <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                                <div v-else>
+                                                    <input type="number" class="inline-input" v-model.number="ui.actorViewer.draft.abilities[k]">
+                                                    ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="three-col">
+                                            <div class="col">
+                                                <div class="section-title">伤害抗性</div>
+                                                <div class="muted small">{{ ui.actorViewer.actor.resistances.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害易伤</div>
+                                                <div class="muted small">{{ ui.actorViewer.actor.vulnerabilities.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害免疫</div>
+                                                <div class="muted small">{{ ui.actorViewer.actor.immunities.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">状态免疫</div>
+                                                <div class="muted small">{{ ui.actorViewer.actor.immunities.conditions.join(', ') || '无' }}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="section-title">六大属性</div>
-                            <div class="ability-grid">
-                                <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
-                                    <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
-                                        ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
-                                    <div v-else>
-                                        <input type="number" class="inline-input"
-                                            v-model.number="ui.actorViewer.draft.abilities[k]">
-                                        ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="three-col">
-                                <div class="col">
-                                    <div class="section-title">伤害抗性</div>
-                                    <div class="muted small">{{ (ui.actorViewer.actor.resistances.damage || []).join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害易伤</div>
-                                    <div class="muted small">{{ (ui.actorViewer.actor.vulnerabilities.damage || []).join(', ')
-                                        || '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害免疫</div>
-                                    <div class="muted small">{{ (ui.actorViewer.actor.immunities.damage || []).join(', ') || '无'
-                                        }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">状态免疫</div>
-                                    <div class="muted small">{{ (ui.actorViewer.actor.immunities.conditions || []).join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="section-title">特性</div>
-                            <div class="muted small"
-                                style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
-                                ui.actorViewer.actor.features || '无' }}</div>
-                            <div class="hl"></div>
-                            <div class="section-title">动作</div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="workspace-pane">
+                        <div class="split-pane-header">
+                            <div class="title">动作</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="workspace-pane-body">
                             <div class="grid" style="gap: 8px;">
                                 <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
                                     :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
@@ -491,6 +698,7 @@
                                         <div class="title">{{ a.name }}</div>
                                         <div class="spacer"></div>
                                         <span class="tag">{{ a.type }}</span>
+                                        <span class="tag" v-if="a.recharge > 0">充能 {{ a.recharge }}</span>
                                     </div>
                                     <div class="muted small" style="margin-top: 6px;">
                                         <template v-if="a.type === 'attack'">
@@ -502,6 +710,7 @@
                                             <span v-if="a.range">距离: {{ a.range }}</span>,
                                             <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
                                             <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                            <span v-if="a.onSuccess === 'half'">, 成功则半伤</span>
                                         </template>
                                         <template v-else>
                                             <span>{{ a.note || '实用能力' }}</span>
@@ -512,374 +721,490 @@
                             </div>
                         </div>
                     </div>
-                </template>
-
-                <!-- Monster 查看模式 -->
-                <template v-else>
-                    <div class="monster-view-container" style="position: relative;">
-                        <img v-if="ui.actorViewer.actor.backgroundImage" :src="ui.actorViewer.actor.backgroundImage"
-                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
-                        <div style="position: relative; z-index: 2; padding: 12px;">
-                            <div class="row">
-                                <h2 style="margin: 0;">{{ ui.actorViewer.actor.name }}</h2>
-                                <div class="spacer"></div>
-                                <span class="pill mono">CR {{ui.actorViewer.actor.cr}}</span>
-                            </div>
-                            <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">AC
-                                    {{ui.actorViewer.actor.ac}}</span>
-                                <span class="pill" v-else>AC <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.ac"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">HP
-                                    {{ui.actorViewer.actor.hpCurrent}} /
-                                    {{ui.actorViewer.actor.hpMax}}</span>
-                                <span class="pill" v-else>HP <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.hpCurrent"> /
-                                    <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.hpMax"></span>
-                                <span class="pill" v-if="!ui.actorViewer.isEditing">速度 {{(ui.actorViewer.actor.speed &&
-                                    ui.actorViewer.actor.speed.walk)
-                                    || '?'}}ft</span>
-                                <span class="pill" v-else>速度 <input type="number" class="inline-input"
-                                        v-model.number="ui.actorViewer.draft.speed.walk">ft</span>
-                                <span class="pill">{{
-                                    (ui.actorViewer.actor.monsterType||[]).map(translateType).join(',') || '未分类'
-                                    }}</span>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="section-title">六大属性</div>
-                            <div class="ability-grid">
-                                <div class="ability" v-for="(v,k) in ui.actorViewer.actor.abilities" :key="k">
-                                    <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div v-if="!ui.actorViewer.isEditing" style="font-weight:700">{{v}}
-                                        ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
-                                    <div v-else>
-                                        <input type="number" class="inline-input"
-                                            v-model.number="ui.actorViewer.draft.abilities[k]">
-                                        ({{mod(ui.actorViewer.draft.abilities[k])>=0?'+':''}}{{mod(ui.actorViewer.draft.abilities[k])}})
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="three-col">
-                                <div class="col">
-                                    <div class="section-title">伤害抗性</div>
-                                    <div class="muted small">{{ ui.actorViewer.actor.resistances.damage.join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害易伤</div>
-                                    <div class="muted small">{{ ui.actorViewer.actor.vulnerabilities.damage.join(', ')
-                                        || '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害免疫</div>
-                                    <div class="muted small">{{ ui.actorViewer.actor.immunities.damage.join(', ') || '无'
-                                        }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">状态免疫</div>
-                                    <div class="muted small">{{ ui.actorViewer.actor.immunities.conditions.join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="section-title">特殊能力/动作</div>
-                            <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in sortedActorViewerActions" :key="a.id"
-                                    :style="['attack', 'save'].includes(a.type) ? { cursor: 'pointer' } : {}"
-                                    @click="['attack', 'save'].includes(a.type) ? selectActionFromViewer(a) : null">
-                                    <div class="row">
-                                        <div class="title">{{ a.name }}</div>
-                                        <div class="spacer"></div>
-                                        <span class="tag">{{ a.type }}</span>
-                                        <span class="tag" v-if="a.recharge > 0">充能 {{ a.recharge }}</span>
-                                    </div>
-                                    <div class="muted small" style="margin-top: 6px;">
-                                        <template v-if="a.type === 'attack'">
-                                            <span>攻击+{{ a.attackBonus }}</span>,
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                        </template>
-                                        <template v-else-if="a.type === 'save'">
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>,
-                                            <span v-if="a.onSuccess === 'half'">成功则半伤</span>
-                                        </template>
-                                        <template v-else>
-                                            <span>{{ a.note || '实用能力' }}</span>
-                                        </template>
-                                    </div>
-                                </div>
-                                <div v-if="!ui.actorViewer.actor.actions?.length" class="placeholder small">无特殊能力或动作
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <div class="hl"></div>
-                <div class="row">
-                    <div class="spacer"></div>
-                    <button class="btn" @click="ui.actorViewer.open=false">关闭</button>
                 </div>
             </div>
         </div>
 
-        <!-- 模态：怪物编辑器 -->
-        <div class="modal-mask" v-if="ui.monsterEditor.open">
-            <div class="modal">
-                <div class="row">
-                    <div class="title">怪物详情/编辑器</div>
-                    <div class="spacer"></div>
-                    <button class="btn"
-                        @click="ui.monsterEditor.mode = ui.monsterEditor.mode === 'view' ? 'edit' : 'view'">
-                        {{ ui.monsterEditor.mode === 'view' ? '切换到编辑模式' : '切换到查看模式' }}
-                    </button>
-                    <button class="btn" @click="ui.monsterEditor.open=false">关闭</button>
-                </div>
-                <div class="hl"></div>
+        <!-- 全屏：怪物编辑器 -->
+        <div class="workspace-mask" v-if="ui.monsterEditor.open">
+            <div class="workspace-header">
+                <div class="workspace-title">怪物详情/编辑器</div>
+                <div class="spacer"></div>
+                <button class="btn" @click="ui.monsterEditor.mode = ui.monsterEditor.mode === 'view' ? 'edit' : 'view'">
+                    {{ ui.monsterEditor.mode === 'view' ? '切换到编辑模式' : '切换到查看模式' }}
+                </button>
+                <button class="btn" @click="closeMonsterEditor()">关闭</button>
+            </div>
+            <div class="workspace-body">
+                <div class="workspace-grid">
+                    <div class="workspace-pane">
+                        <div class="workspace-pane-body">
+                            <div v-if="ui.monsterEditor.mode === 'view'">
+                                <div class="monster-view-container" style="position: relative;">
+                                    <img v-if="uiState.monsterDraft.backgroundImage" :src="uiState.monsterDraft.backgroundImage"
+                                        style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                    <div style="position: relative; z-index: 2; padding: 12px;">
+                                        <div class="row">
+                                            <input type="file" ref="bgUpload" @change="onBgImageSelect" accept="image/*" hidden>
+                                            <button class="btn" @click="$refs.bgUpload.click()">上传背景</button>
+                                            <h2 style="margin: 0;">{{ uiState.monsterDraft.name }}</h2>
+                                            <div class="spacer"></div>
+                                            <span class="pill mono">CR {{uiState.monsterDraft.cr}}</span>
+                                        </div>
+                                        <div class="kpi muted small" style="margin-top: 8px;">
+                                            <span class="pill">AC {{uiState.monsterDraft.ac}}</span>
+                                            <span class="pill">HP {{uiState.monsterDraft.hp.average}}</span>
+                                            <span class="pill">速度 {{uiState.monsterDraft.speed.walk}}ft</span>
+                                            <span class="pill">{{ (uiState.monsterDraft.type||[]).map(translateType).join(', ') || '未分类' }}</span>
+                                        </div>
 
-                <!-- 查看模式 -->
-                <div v-if="ui.monsterEditor.mode === 'view'">
-                    <div class="monster-view-container" style="position: relative;">
-                        <!-- 背景图 -->
-                        <img v-if="uiState.monsterDraft.backgroundImage" :src="uiState.monsterDraft.backgroundImage"
-                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                        <div class="hl"></div>
 
-                        <!-- 内容容器 -->
-                        <div style="position: relative; z-index: 2; padding: 12px;">
-                            <div class="row">
-                                <!-- 上传按钮 -->
-                                <input type="file" ref="bgUpload" @change="onBgImageSelect" accept="image/*" hidden>
-                                <button class="btn" @click="$refs.bgUpload.click()">上传背景</button>
-                                <h2 style="margin: 0;">{{ uiState.monsterDraft.name }}</h2>
-                                <div class="spacer"></div>
-                                <span class="pill mono">CR {{uiState.monsterDraft.cr}}</span>
-                            </div>
-                            <div class="kpi muted small" style="margin-top: 8px;">
-                                <span class="pill">AC {{uiState.monsterDraft.ac}}</span>
-                                <span class="pill">HP {{uiState.monsterDraft.hp.average}}</span>
-                                <span class="pill">速度 {{uiState.monsterDraft.speed.walk}}ft</span>
-                                <span class="pill">{{ (uiState.monsterDraft.type||[]).map(translateType).join(', ') ||
-                                    '未分类' }}</span>
-                            </div>
+                                        <div class="section-title">六大属性</div>
+                                        <div class="ability-grid">
+                                            <div class="ability" v-for="(v,k) in uiState.monsterDraft.abilities" :key="k">
+                                                <div class="muted small">{{k.toUpperCase()}}</div>
+                                                <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                            </div>
+                                        </div>
 
-                            <div class="hl"></div>
+                                        <div class="hl"></div>
 
-                            <div class="section-title">六大属性</div>
-                            <div class="ability-grid">
-                                <div class="ability" v-for="(v,k) in uiState.monsterDraft.abilities" :key="k">
-                                    <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
-                                </div>
-                            </div>
-
-                            <div class="hl"></div>
-
-                            <div class="three-col">
-                                <div class="col">
-                                    <div class="section-title">伤害抗性</div>
-                                    <div class="muted small">{{ uiState.monsterDraft.resistances.damage.join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害易伤</div>
-                                    <div class="muted small">{{ uiState.monsterDraft.vulnerabilities.damage.join(', ')
-                                        || '无' }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害免疫</div>
-                                    <div class="muted small">{{ uiState.monsterDraft.immunities.damage.join(', ') || '无'
-                                        }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">状态免疫</div>
-                                    <div class="muted small">{{ uiState.monsterDraft.immunities.conditions.join(', ') ||
-                                        '无' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="hl"></div>
-
-                            <div class="section-title">特殊能力/动作</div>
-                            <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in sortedMonsterDraftActions" :key="a.id">
-                                    <div class="row">
-                                        <div class="title">{{ a.name }}</div>
-                                        <div class="spacer"></div>
-                                        <span class="tag">{{ a.type }}</span>
-                                        <span class="tag" v-if="a.recharge > 0">充能 {{ a.recharge }}</span>
-                                    </div>
-                                    <div class="muted small" style="margin-top: 6px;">
-                                        <template v-if="a.type === 'attack'">
-                                            <span>攻击+{{ a.attackBonus }}</span>,
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                        </template>
-                                        <template v-else-if="a.type === 'save'">
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>,
-                                            <span v-if="a.onSuccess === 'half'">成功则半伤</span>
-                                        </template>
-                                        <template v-else>
-                                            <span>{{ a.note || '实用能力' }}</span>
-                                        </template>
+                                        <div class="three-col">
+                                            <div class="col">
+                                                <div class="section-title">伤害抗性</div>
+                                                <div class="muted small">{{ uiState.monsterDraft.resistances.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害易伤</div>
+                                                <div class="muted small">{{ uiState.monsterDraft.vulnerabilities.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害免疫</div>
+                                                <div class="muted small">{{ uiState.monsterDraft.immunities.damage.join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">状态免疫</div>
+                                                <div class="muted small">{{ uiState.monsterDraft.immunities.conditions.join(', ') || '无' }}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div v-if="!uiState.monsterDraft.actions?.length" class="placeholder small">无特殊能力或动作
+                            </div>
+
+                            <div v-if="ui.monsterEditor.mode === 'edit'">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <input type="file" ref="avatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
+                                    <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;" @click="$refs.avatarUpload.click()">
+                                        <img v-if="uiState.monsterDraft.avatar" :src="uiState.monsterDraft.avatar" alt="Avatar"
+                                            style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                        <span v-else>🧟</span>
+                                    </div>
+                                    <button class="btn small" @click="$refs.avatarUpload.click()">上传/更换头像</button>
+                                </div>
+                                <div class="two-col">
+                                    <div class="col">
+                                        <label>名称</label>
+                                        <input class="input" v-model="uiState.monsterDraft.name" placeholder="例如：哥布林" />
+                                    </div>
+                                    <div class="col">
+                                        <label>CR</label>
+                                        <input type="number" step="0.5" class="input" v-model.number="uiState.monsterDraft.cr" />
+                                    </div>
+                                    <div class="col">
+                                        <label>类型（点击选择）</label>
+                                        <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                            <span v-for="typeKey in monsterTypes" :key="typeKey" class="chip"
+                                                :class="{ active: uiState.monsterDraft.type.includes(typeKey) }"
+                                                @click="toggleMonsterDraftType(typeKey)">
+                                                {{ translateType(typeKey) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <label>AC</label>
+                                        <input type="number" class="input" v-model.number="uiState.monsterDraft.ac" />
+                                    </div>
+                                    <div class="col">
+                                        <label>HP 平均</label>
+                                        <input type="number" class="input" v-model.number="uiState.monsterDraft.hp.average" />
+                                    </div>
+                                    <div class="col">
+                                        <label>速度（步行）</label>
+                                        <input type="number" class="input" v-model.number="uiState.monsterDraft.speed.walk" />
+                                    </div>
+                                </div>
+
+                                <details open>
+                                    <summary class="section-title">六大属性</summary>
+                                    <div class="ability-grid" style="padding-top: 8px;">
+                                        <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
+                                            <div class="muted small">{{k.toUpperCase()}}</div>
+                                            <input type="number" class="input" style="width:80px"
+                                                v-model.number="uiState.monsterDraft.abilities[k]" />
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <div class="hl"></div>
+                                <details>
+                                    <summary class="section-title">抗性/易伤/免疫（伤害/状态）</summary>
+                                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 8px;">
+                                        <div class="col">
+                                            <label>伤害抗性</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.monsterDraft.resistances.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('resistances', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>伤害易伤</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.monsterDraft.vulnerabilities.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('vulnerabilities', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>伤害免疫</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.monsterDraft.immunities.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('immunities', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>状态免疫</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="ct in conditionTypes" :key="ct" class="chip"
+                                                    :class="{active: uiState.monsterDraft.immunities.conditions.includes(ct)}"
+                                                    @click="toggleConditionImmunity(ct)">
+                                                    {{ ct }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <div class="hl"></div>
+                                <details>
+                                    <summary class="section-title">CR 一键调整</summary>
+                                    <div class="row" style="padding-top: 8px;">
+                                        <input type="number" step="0.5" class="input" style="width:120px"
+                                            v-model.number="uiState.targetCR" placeholder="目标CR">
+                                        <button class="btn" @click="autoAdjustCR()">调整</button>
+                                    </div>
+                                    <div class="danger-zone small" style="margin-top: 8px;">
+                                        TODO：完善“智能CR调整算法”映射规则与范围值随机生成、根据伤害/轮反算伤害骰。目前为占位简化实现，便于后续替换。
+                                    </div>
+                                </details>
+
+                                <div class="hl"></div>
+                                <div class="row">
+                                    <button class="btn ok" @click="updateMonster()" v-if="uiState.monsterDraft.id">更改并关闭</button>
+                                    <button class="btn ok" @click="saveMonsterAsNew()">另存为自定义</button>
+                                    <div class="spacer"></div>
+                                    <label class="row" style="cursor:pointer; margin-right: 16px;">
+                                        <input type="checkbox" v-model="uiState.monsterDraft.isDefault">
+                                        <span>设置为默认参战</span>
+                                    </label>
+                                    <button class="btn" @click="addToBattleFromEditor(uiState.monsterDraft, 'monster')">加入战斗并关闭</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 编辑模式 -->
-                <div v-if="ui.monsterEditor.mode === 'edit'">
-                    <div
-                        style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <input type="file" ref="avatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
-                        <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;"
-                            @click="$refs.avatarUpload.click()">
-                            <img v-if="uiState.monsterDraft.avatar" :src="uiState.monsterDraft.avatar" alt="Avatar"
-                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                            <span v-else>🧟</span>
-                        </div>
-                        <button class="btn small" @click="$refs.avatarUpload.click()">上传/更换头像</button>
-                    </div>
-                    <div class="two-col">
-                        <div class="col">
-                            <label>名称</label>
-                            <input class="input" v-model="uiState.monsterDraft.name" placeholder="例如：哥布林" />
-                        </div>
-                        <div class="col">
-                            <label>CR</label>
-                            <input type="number" step="0.5" class="input" v-model.number="uiState.monsterDraft.cr" />
-                        </div>
-                        <div class="col">
-                            <label>类型（点击选择）</label>
-                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                <span v-for="typeKey in monsterTypes" :key="typeKey" class="chip"
-                                    :class="{ active: uiState.monsterDraft.type.includes(typeKey) }"
-                                    @click="toggleMonsterDraftType(typeKey)">
-                                    {{ translateType(typeKey) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>AC</label>
-                            <input type="number" class="input" v-model.number="uiState.monsterDraft.ac" />
-                        </div>
-                        <div class="col">
-                            <label>HP 平均</label>
-                            <input type="number" class="input" v-model.number="uiState.monsterDraft.hp.average" />
-                        </div>
-                        <div class="col">
-                            <label>速度（步行）</label>
-                            <input type="number" class="input" v-model.number="uiState.monsterDraft.speed.walk" />
-                        </div>
-                    </div>
-
-                    <details open>
-                        <summary class="section-title">六大属性</summary>
-                        <div class="ability-grid" style="padding-top: 8px;">
-                            <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
-                                <div class="muted small">{{k.toUpperCase()}}</div>
-                                <input type="number" class="input" style="width:80px"
-                                    v-model.number="uiState.monsterDraft.abilities[k]" />
-                            </div>
-                        </div>
-                    </details>
-
-                    <div class="hl"></div>
-                    <details>
-                        <summary class="section-title">抗性/易伤/免疫（伤害/状态）</summary>
-                        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 8px;">
-                            <div class="col">
-                                <label>伤害抗性</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.monsterDraft.resistances.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('resistances', dt)">
-                                        {{ dt }}
-                                    </span>
+                    <div class="workspace-pane">
+                        <div class="split-pane-header">
+                            <div v-if="ui.monsterEditor.mode === 'edit'" class="workspace-tabs">
+                                <div class="workspace-tab"
+                                    :class="{ active: !ui.actionPool.open && !ui.abilityPool.open && !(ui.actionEditor.open && ui.actionEditor.nested) }"
+                                    @click="ui.actionPool.open=false; ui.abilityPool.open=false; ui.actionEditor.open=false">
+                                    私有动作
+                                </div>
+                                <div class="workspace-tab" :class="{ active: ui.actionPool.open && ui.actionPool.nested }" @click="openActionPool()">
+                                    动作库
+                                </div>
+                                <div class="workspace-tab" :class="{ active: ui.abilityPool.open && ui.abilityPool.nested }" @click="openAbilityPool()">
+                                    能力池
+                                </div>
+                                <div class="workspace-tab" v-if="ui.actionEditor.open && ui.actionEditor.nested" :class="{ active: ui.actionEditor.open && ui.actionEditor.nested }">
+                                    编辑动作
                                 </div>
                             </div>
-                            <div class="col">
-                                <label>伤害易伤</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.monsterDraft.vulnerabilities.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('vulnerabilities', dt)">
-                                        {{ dt }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label>伤害免疫</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.monsterDraft.immunities.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('immunities', dt)">
-                                        {{ dt }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label>状态免疫</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="ct in conditionTypes" :key="ct" class="chip"
-                                        :class="{active: uiState.monsterDraft.immunities.conditions.includes(ct)}"
-                                        @click="toggleConditionImmunity(ct)">
-                                        {{ ct }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-
-                    <div class="hl"></div>
-                    <details open>
-                        <summary class="section-title row">
-                            <span>特殊能力/动作</span>
+                            <div v-else class="title">特殊能力/动作</div>
                             <div class="spacer"></div>
-                            <button class="btn small"
-                                @click.prevent="openActionsViewer(uiState.monsterDraft, 'monster')">管理动作</button>
-                        </summary>
-                    </details>
-
-                    <div class="hl"></div>
-                    <details>
-                        <summary class="section-title">CR 一键调整</summary>
-                        <div class="row" style="padding-top: 8px;">
-                            <input type="number" step="0.5" class="input" style="width:120px"
-                                v-model.number="uiState.targetCR" placeholder="目标CR">
-                            <button class="btn" @click="autoAdjustCR()">调整</button>
+                            <button class="btn small" v-if="ui.monsterEditor.mode === 'edit' && (ui.actionPool.open || ui.abilityPool.open || (ui.actionEditor.open && ui.actionEditor.nested))"
+                                @click="ui.actionPool.open=false; ui.abilityPool.open=false; ui.actionEditor.open=false">
+                                返回
+                            </button>
                         </div>
-                        <div class="danger-zone small" style="margin-top: 8px;">
-                            TODO：完善“智能CR调整算法”映射规则与范围值随机生成、根据伤害/轮反算伤害骰。目前为占位简化实现，便于后续替换。
-                        </div>
-                    </details>
-                </div>
+                        <div class="workspace-pane-body">
+                            <template v-if="ui.monsterEditor.mode === 'view'">
+                                <div class="grid" style="gap: 8px;">
+                                    <div class="card" v-for="a in sortedMonsterDraftActions" :key="a.id">
+                                        <div class="row">
+                                            <div class="title">{{ a.name }}</div>
+                                            <div class="spacer"></div>
+                                            <span class="tag">{{ a.type }}</span>
+                                            <span class="tag" v-if="a.recharge > 0">充能 {{ a.recharge }}</span>
+                                        </div>
+                                        <div class="muted small" style="margin-top: 6px;">
+                                            <template v-if="a.type === 'attack'">
+                                                <span>攻击+{{ a.attackBonus }}</span>,
+                                                <span v-if="a.range">距离: {{ a.range }}</span>,
+                                                <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                            </template>
+                                            <template v-else-if="a.type === 'save'">
+                                                <span v-if="a.range">距离: {{ a.range }}</span>,
+                                                <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+                                                <span>伤害: {{ formatDamages(a.damages) }}</span>,
+                                                <span v-if="a.onSuccess === 'half'">成功则半伤</span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ a.note || '实用能力' }}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div v-if="!uiState.monsterDraft.actions?.length" class="placeholder small">无特殊能力或动作</div>
+                                </div>
+                            </template>
 
-                <div class="hl"></div>
-                <div class="row">
-                    <button class="btn ok" @click="updateMonster()" v-if="uiState.monsterDraft.id">更改并关闭</button>
-                    <button class="btn ok" @click="saveMonsterAsNew()">另存为自定义</button>
-                    <div class="spacer"></div>
-                    <label class="row" style="cursor:pointer; margin-right: 16px;">
-                        <input type="checkbox" v-model="uiState.monsterDraft.isDefault">
-                        <span>设置为默认参战</span>
-                    </label>
-                    <button class="btn" @click="addToBattleFromEditor(uiState.monsterDraft, 'monster')">加入战斗并关闭</button>
+                            <template v-else>
+                                <template v-if="ui.actionEditor.open && ui.actionEditor.nested">
+                                    <div class="row">
+                                        <div class="spacer"></div>
+                                        <button class="btn" @click="ui.actionEditor.open=false">关闭</button>
+                                    </div>
+                                    <div class="hl"></div>
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>动作名称</label>
+                                                <input class="input" style="min-width:160px" v-model="uiState.actionDraft.name"
+                                                    placeholder="动作名称" />
+                                            </div>
+                                            <div class="col">
+                                                <label>类型</label>
+                                                <select class="input" v-model="uiState.actionDraft.type">
+                                                    <option value="attack">攻击检定</option>
+                                                    <option value="save">豁免检定</option>
+                                                    <option value="utility">其他</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="row small" style="gap:12px">
+                                            <template v-if="uiState.actionDraft.type==='attack'">
+                                                <div class="col">
+                                                    <label>攻击加值</label>
+                                                    <input type="number" class="input" style="width:90px"
+                                                        v-model.number="uiState.actionDraft.attackBonus" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>攻击距离</label>
+                                                    <input class="input" style="width:90px" v-model="uiState.actionDraft.range"
+                                                        placeholder="例如 5 ft." />
+                                                </div>
+                                                <div class="col" style="grid-column: span 2;">
+                                                    <div class="row">
+                                                        <label>多段伤害</label>
+                                                        <div class="spacer"></div>
+                                                        <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                    </div>
+                                                    <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row"
+                                                        style="margin-top: 4px;">
+                                                        <input class="input mono" style="width:120px" v-model="damage.dice"
+                                                            placeholder="例如 2d6+3" />
+                                                        <select class="input" v-model="damage.type">
+                                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                        </select>
+                                                        <button v-if="index > 0" class="btn danger small"
+                                                            @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <label>充能回合</label>
+                                                    <input type="number" class="input" style="width:90px"
+                                                        v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>命中附加状态</label>
+                                                    <select class="input" v-model="uiState.actionDraft.onHitStatus">
+                                                        <option value="">无</option>
+                                                        <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
+                                                    </select>
+                                                    <div v-if="uiState.actionDraft.onHitStatus" class="form-row">
+                                                        <label>
+                                                            豁免属性:
+                                                            <select v-model="uiState.actionDraft.onHitSaveAbility">
+                                                                <option value="str">力量 (Strength)</option>
+                                                                <option value="dex">敏捷 (Dexterity)</option>
+                                                                <option value="con">体质 (Constitution)</option>
+                                                                <option value="int">智力 (Intelligence)</option>
+                                                                <option value="wis">感知 (Wisdom)</option>
+                                                                <option value="cha">魅力 (Charisma)</option>
+                                                            </select>
+                                                        </label>
+                                                        <label>
+                                                            豁免DC:
+                                                            <input type="number" v-model.number="uiState.actionDraft.onHitSaveDC" style="width: 60px;">
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col" v-if="uiState.actionDraft.onHitStatus">
+                                                    <label>状态持续回合</label>
+                                                    <input type="number" class="input" style="width:90px"
+                                                        v-model.number="uiState.actionDraft.onHitStatusRounds" placeholder="默认1" />
+                                                </div>
+                                            </template>
+                                            <template v-else-if="uiState.actionDraft.type==='save'">
+                                                <div class="col">
+                                                    <label>豁免属性</label>
+                                                    <select class="input" v-model="uiState.actionDraft.saveAbility">
+                                                        <option>str</option>
+                                                        <option>dex</option>
+                                                        <option>con</option>
+                                                        <option>int</option>
+                                                        <option>wis</option>
+                                                        <option>cha</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col">
+                                                    <label>DC</label>
+                                                    <input type="number" class="input" style="width:90px"
+                                                        v-model.number="uiState.actionDraft.saveDC" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>攻击距离</label>
+                                                    <input class="input" style="width:90px" v-model="uiState.actionDraft.range"
+                                                        placeholder="例如 30 ft." />
+                                                </div>
+                                                <div class="col" style="grid-column: span 2;">
+                                                    <div class="row">
+                                                        <label>多段伤害</label>
+                                                        <div class="spacer"></div>
+                                                        <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                    </div>
+                                                    <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row"
+                                                        style="margin-top: 4px;">
+                                                        <input class="input mono" style="width:120px" v-model="damage.dice"
+                                                            placeholder="例如 2d6+3" />
+                                                        <select class="input" v-model="damage.type">
+                                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                        </select>
+                                                        <button v-if="index > 0" class="btn danger small"
+                                                            @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <label>充能回合</label>
+                                                    <input type="number" class="input" style="width:90px"
+                                                        v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>成功是否半伤</label>
+                                                    <select class="input" v-model="uiState.actionDraft.onSuccess">
+                                                        <option value="half">半伤</option>
+                                                        <option value="none">免疫</option>
+                                                    </select>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <span class="muted">实用动作，无自动结算</span>
+                                            </template>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <button class="btn ok" @click="saveAction()">保存并关闭</button>
+                                    </div>
+                                </template>
+
+                                <template v-else-if="ui.actionPool.open && ui.actionPool.nested">
+                                    <div class="toolbar">
+                                        <input class="input" placeholder="搜索动作..." v-model="ui.actionPool.keyword" />
+                                        <button class="btn" @click="openActionEditor(); ui.actionEditor.nested=true">+ 新动作</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="action in filteredActions" :key="action.id">
+                                            <div class="row">
+                                                <div class="title">{{action.name}}</div>
+                                                <span class="pill right">{{action.type}}</span>
+                                            </div>
+                                            <div class="kpi muted small" style="margin-top:6px">
+                                                <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                                <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                                            </div>
+                                            <div class="hl"></div>
+                                            <div class="row">
+                                                <button class="btn" @click="attachActionToDraft(action)">添加到当前生物</button>
+                                                <button class="btn" @click="openActionEditor(action); ui.actionEditor.nested=true">编辑</button>
+                                                <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template v-else-if="ui.abilityPool.open && ui.abilityPool.nested">
+                                    <div class="toolbar">
+                                        <input class="input" placeholder="搜索能力..." v-model="ui.abilityPool.keyword" />
+                                        <button class="btn" @click="openAbilityEditor()">+ 新能力</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="ab in filteredAbilities" :key="ab.id">
+                                            <div class="row">
+                                                <div class="title">{{ab.name}}</div>
+                                                <div class="spacer"></div>
+                                                <button class="btn" @click="attachAbilityToDraft(ab)">添加到当前生物</button>
+                                                <button class="btn" @click="openAbilityEditor(ab)">编辑</button>
+                                                <button class="btn danger" @click="deleteAbility(ab.id)">删除</button>
+                                            </div>
+                                            <div class="muted small" style="margin-top:6px">{{ab.description}}</div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template v-else>
+                                    <div class="row" style="margin-bottom: 8px;">
+                                        <button class="btn primary" @click="openActionEditorForDraft()">+ 新建私有动作</button>
+                                        <button class="btn" @click="openActionPool()">从动作库添加</button>
+                                        <button class="btn" @click="openAbilityPool()">从能力池添加</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="(a, idx) in ui.actionsViewer.draft.actions" :key="a.id || idx">
+                                            <div class="row">
+                                                <div class="title">{{a.name}}</div>
+                                                <span class="pill right">{{a.type}}</span>
+                                                <div class="spacer"></div>
+                                                <button class="btn" @click="openActionEditorForDraft(a)">编辑</button>
+                                                <button class="btn danger" @click="ui.actionsViewer.draft.actions.splice(idx,1)">删除</button>
+                                            </div>
+                                            <div class="kpi muted small" style="margin-top:6px">
+                                                <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
+                                                <span class="pill" v-if="a.range">距离: {{a.range}}</span>
+                                                <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
+                                                <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="!ui.actionsViewer.draft.actions?.length" class="placeholder small">暂无动作</div>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 模态：能力池 -->
-        <div class="modal-mask" v-if="ui.abilityPool.open" :style="{ zIndex: ui.abilityPool.nested ? 60 : 50 }">
+        <div class="modal-mask" v-if="ui.abilityPool.open && !ui.abilityPool.nested && !(ui.monsterEditor.open || ui.pcEditor.open)" :style="{ zIndex: ui.actionsViewer.open ? 60 : 50 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">特殊能力库</div>
@@ -896,7 +1221,7 @@
                         <div class="row">
                             <div class="title">{{ab.name}}</div>
                             <div class="spacer"></div>
-                            <button class="btn" @click="attachAbilityToDraft(ab)">添加到当前怪物</button>
+                            <button class="btn" @click="attachAbilityToDraft(ab)">添加到当前生物</button>
                             <button class="btn" @click="openAbilityEditor(ab)">编辑</button>
                             <button class="btn danger" @click="deleteAbility(ab.id)">删除</button>
                         </div>
@@ -907,7 +1232,7 @@
         </div>
 
         <!-- 模态：动作库 -->
-        <div class="modal-mask" v-if="ui.actionPool.open" :style="{ zIndex: ui.actionPool.nested ? 60 : 50 }">
+        <div class="modal-mask" v-if="ui.actionPool.open && !ui.actionPool.nested && !(ui.monsterEditor.open || ui.pcEditor.open)" :style="{ zIndex: ui.actionsViewer.open ? 60 : 50 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">动作库</div>
@@ -943,7 +1268,7 @@
         </div>
 
         <!-- 模态：能力编辑 -->
-        <div class="modal-mask" v-if="ui.abilityEditor.open" :style="{ zIndex: ui.abilityEditor.nested ? 70 : 50 }">
+        <div class="modal-mask" v-if="ui.abilityEditor.open" :style="{ zIndex: ui.abilityEditor.nested ? 95 : 50 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">编辑能力</div>
@@ -963,231 +1288,446 @@
             </div>
         </div>
 
-        <!-- 模态：PC 编辑 -->
-        <div class="modal-mask" v-if="ui.pcEditor.open">
-            <div class="modal">
-                <div class="row">
-                    <div class="title">PC 角色详情/编辑器</div>
-                    <div class="spacer"></div>
-                    <button class="btn" @click="ui.pcEditor.mode = ui.pcEditor.mode === 'view' ? 'edit' : 'view'">
-                        {{ ui.pcEditor.mode === 'view' ? '切换到编辑模式' : '切换到查看模式' }}
-                    </button>
-                    <button class="btn" @click="ui.pcEditor.open=false">关闭</button>
-                </div>
-                <div class="hl"></div>
+        <!-- 全屏：PC 编辑器 -->
+        <div class="workspace-mask" v-if="ui.pcEditor.open">
+            <div class="workspace-header">
+                <div class="workspace-title">PC 角色详情/编辑器</div>
+                <div class="spacer"></div>
+                <button class="btn" @click="ui.pcEditor.mode = ui.pcEditor.mode === 'view' ? 'edit' : 'view'">
+                    {{ ui.pcEditor.mode === 'view' ? '切换到编辑模式' : '切换到查看模式' }}
+                </button>
+                <button class="btn" @click="closePCEditor()">关闭</button>
+            </div>
+            <div class="workspace-body">
+                <div class="workspace-grid">
+                    <div class="workspace-pane">
+                        <div class="workspace-pane-body">
+                            <div v-if="ui.pcEditor.mode === 'view'">
+                                <div class="monster-view-container" style="position: relative;">
+                                    <img v-if="uiState.pcDraft.backgroundImage" :src="uiState.pcDraft.backgroundImage"
+                                        style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                    <div style="position: relative; z-index: 2; padding: 12px;">
+                                        <div class="row">
+                                            <input type="file" ref="pcBgUpload" @change="onBgImageSelect" accept="image/*" hidden>
+                                            <button class="btn" @click="$refs.pcBgUpload.click()">上传背景</button>
+                                            <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
+                                                <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
+                                                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                                <span v-else>🧝</span>
+                                            </div>
+                                            <div class="col">
+                                                <h2 style="margin: 0;">{{ uiState.pcDraft.name }}</h2>
+                                                <div class="kpi muted small" style="margin-top: 8px;">
+                                                    <span class="pill">AC {{uiState.pcDraft.ac}}</span>
+                                                    <span class="pill">HP {{uiState.pcDraft.hpCurrent}} / {{uiState.pcDraft.hpMax}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                <!-- 查看模式 -->
-                <div v-if="ui.pcEditor.mode === 'view'">
-                    <div class="monster-view-container" style="position: relative;">
-                        <!-- 背景图 -->
-                        <img v-if="uiState.pcDraft.backgroundImage" :src="uiState.pcDraft.backgroundImage"
-                            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: 1; border-radius: var(--radius);">
+                                        <div class="hl"></div>
 
-                        <!-- 内容容器 -->
-                        <div style="position: relative; z-index: 2; padding: 12px;">
-                            <div class="row">
-                                <!-- 上传按钮 -->
-                                <input type="file" ref="pcBgUpload" @change="onBgImageSelect" accept="image/*" hidden>
-                                <button class="btn" @click="$refs.pcBgUpload.click()">上传背景</button>
-                                <div class="avatar" style="width: 60px; height: 60px; font-size: 30px;">
-                                    <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
-                                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                    <span v-else>🧝</span>
-                                </div>
-                                <div class="col">
-                                    <h2 style="margin: 0;">{{ uiState.pcDraft.name }}</h2>
-                                    <div class="kpi muted small" style="margin-top: 8px;">
-                                        <span class="pill">AC {{uiState.pcDraft.ac}}</span>
-                                        <span class="pill">HP {{uiState.pcDraft.hpCurrent}} / {{uiState.pcDraft.hpMax}}</span>
+                                        <div class="section-title">六大属性</div>
+                                        <div class="ability-grid">
+                                            <div class="ability" v-for="(v,k) in uiState.pcDraft.abilities" :key="k">
+                                                <div class="muted small">{{k.toUpperCase()}}</div>
+                                                <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="hl"></div>
+
+                                        <div class="three-col">
+                                            <div class="col">
+                                                <div class="section-title">伤害抗性</div>
+                                                <div class="muted small">{{ (uiState.pcDraft.resistances.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害易伤</div>
+                                                <div class="muted small">{{ (uiState.pcDraft.vulnerabilities.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">伤害免疫</div>
+                                                <div class="muted small">{{ (uiState.pcDraft.immunities.damage || []).join(', ') || '无' }}</div>
+                                            </div>
+                                            <div class="col">
+                                                <div class="section-title">状态免疫</div>
+                                                <div class="muted small">{{ (uiState.pcDraft.immunities.conditions || []).join(', ') || '无' }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="hl"></div>
+                                        <div class="section-title">特性</div>
+                                        <div class="muted small" style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{ uiState.pcDraft.features || '无' }}</div>
+
+                                        <div class="hl"></div>
+                                        <div class="row">
+                                            <button class="btn ok" @click="savePC()">保存并关闭</button>
+                                            <div class="spacer"></div>
+                                            <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="hl"></div>
-
-                            <div class="section-title">六大属性</div>
-                            <div class="ability-grid">
-                                <div class="ability" v-for="(v,k) in uiState.pcDraft.abilities" :key="k">
-                                    <div class="muted small">{{k.toUpperCase()}}</div>
-                                    <div style="font-weight:700">{{v}} ({{mod(v)>=0?'+':''}}{{mod(v)}})</div>
+                            <div v-if="ui.pcEditor.mode === 'edit'">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <input type="file" ref="pcAvatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
+                                    <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;"
+                                        @click="$refs.pcAvatarUpload.click()">
+                                        <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
+                                            style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                        <span v-else>🧝</span>
+                                    </div>
+                                    <button class="btn small" @click="$refs.pcAvatarUpload.click()">上传/更换头像</button>
                                 </div>
-                            </div>
-
-                            <div class="hl"></div>
-
-                            <div class="three-col">
-                                <div class="col">
-                                    <div class="section-title">伤害抗性</div>
-                                    <div class="muted small">{{ (uiState.pcDraft.resistances.damage || []).join(', ') || '无' }}
+                                <div class="two-col">
+                                    <div class="col"><label>名称</label><input class="input" v-model="uiState.pcDraft.name" /></div>
+                                    <div class="col"><label>AC</label><input type="number" class="input" v-model.number="uiState.pcDraft.ac" /></div>
+                                    <div class="col"><label>HP 最大</label><input type="number" class="input" v-model.number="uiState.pcDraft.hpMax" /></div>
+                                    <div class="col"><label>HP 当前</label><input type="number" class="input" v-model.number="uiState.pcDraft.hpCurrent" /></div>
+                                </div>
+                                <div class="section-title">六大属性</div>
+                                <div class="ability-grid">
+                                    <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
+                                        <div class="muted small">{{k.toUpperCase()}}</div>
+                                        <input type="number" class="input" style="width:80px" v-model.number="uiState.pcDraft.abilities[k]" />
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <div class="section-title">伤害易伤</div>
-                                    <div class="muted small">{{ (uiState.pcDraft.vulnerabilities.damage || []).join(', ') || '无'
-                                        }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="section-title">伤害免疫</div>
-                                    <div class="muted small">{{ (uiState.pcDraft.immunities.damage || []).join(', ') || '无' }}
+
+                                <details>
+                                    <summary class="section-title">抗性/易伤/免疫（伤害/状态）</summary>
+                                    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 8px;">
+                                        <div class="col">
+                                            <label>伤害抗性</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.pcDraft.resistances.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('resistances', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>伤害易伤</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.pcDraft.vulnerabilities.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('vulnerabilities', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>伤害免疫</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="dt in damageTypes" :key="dt" class="chip"
+                                                    :class="{active: uiState.pcDraft.immunities.damage.includes(dt)}"
+                                                    @click="toggleDamageModifier('immunities', dt)">
+                                                    {{ dt }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label>状态免疫</label>
+                                            <div class="row" style="flex-wrap: wrap; gap: 6px;">
+                                                <span v-for="ct in conditionTypes" :key="ct" class="chip"
+                                                    :class="{active: uiState.pcDraft.immunities.conditions.includes(ct)}"
+                                                    @click="toggleConditionImmunity(ct)">
+                                                    {{ ct }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
+                                </details>
+
+                                <div class="section-title row">
+                                    <span>特性</span>
                                 </div>
-                                <div class="col">
-                                    <div class="section-title">状态免疫</div>
-                                    <div class="muted small">{{ (uiState.pcDraft.immunities.conditions || []).join(', ') || '无'
-                                        }}</div>
+                                <textarea class="input underline-input" rows="3" v-model="uiState.pcDraft.features" placeholder="输入角色的特性、背景、关键信息等..."></textarea>
+
+                                <div class="hl"></div>
+                                <div class="row">
+                                    <button class="btn ok" @click="savePC()">保存并关闭</button>
+                                    <div class="spacer"></div>
+                                    <label class="row" style="cursor:pointer; margin-right: 16px;">
+                                        <input type="checkbox" v-model="uiState.pcDraft.isDefault">
+                                        <span>设置为默认参战</span>
+                                    </label>
+                                    <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="hl"></div>
-                            <div class="section-title">特性</div>
-                            <div class="muted small"
-                                style="white-space: pre-wrap; background: #1a1d21; padding: 8px; border-radius: 8px;">{{
-                                uiState.pcDraft.features || '无' }}</div>
+                    <div class="workspace-pane">
+                        <div class="split-pane-header">
+                            <div v-if="ui.pcEditor.mode === 'edit'" class="workspace-tabs">
+                                <div class="workspace-tab"
+                                    :class="{ active: !ui.actionPool.open && !ui.abilityPool.open && !(ui.actionEditor.open && ui.actionEditor.nested) }"
+                                    @click="ui.actionPool.open=false; ui.abilityPool.open=false; ui.actionEditor.open=false">
+                                    私有动作
+                                </div>
+                                <div class="workspace-tab" :class="{ active: ui.actionPool.open && ui.actionPool.nested }" @click="openActionPool()">
+                                    动作库
+                                </div>
+                                <div class="workspace-tab" :class="{ active: ui.abilityPool.open && ui.abilityPool.nested }" @click="openAbilityPool()">
+                                    能力池
+                                </div>
+                                <div class="workspace-tab" v-if="ui.actionEditor.open && ui.actionEditor.nested" :class="{ active: ui.actionEditor.open && ui.actionEditor.nested }">
+                                    编辑动作
+                                </div>
+                            </div>
+                            <div v-else class="title">动作</div>
+                            <div class="spacer"></div>
+                            <button class="btn small" v-if="ui.pcEditor.mode === 'edit' && (ui.actionPool.open || ui.abilityPool.open || (ui.actionEditor.open && ui.actionEditor.nested))"
+                                @click="ui.actionPool.open=false; ui.abilityPool.open=false; ui.actionEditor.open=false">
+                                返回
+                            </button>
+                        </div>
+                        <div class="workspace-pane-body">
+                            <template v-if="ui.pcEditor.mode === 'view'">
+                                <div class="grid" style="gap: 8px;">
+                                    <div class="card" v-for="a in sortedPcDraftActions" :key="a.id">
+                                        <div class="row">
+                                            <div class="title">{{ a.name }}</div>
+                                            <div class="spacer"></div>
+                                            <span class="tag">{{ a.type }}</span>
+                                        </div>
+                                        <div class="muted small" style="margin-top: 6px;">
+                                            <template v-if="a.type === 'attack'">
+                                                <span>攻击+{{ a.attackBonus }}</span>,
+                                                <span v-if="a.range">距离: {{ a.range }}</span>,
+                                                <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                            </template>
+                                            <template v-else-if="a.type === 'save'">
+                                                <span v-if="a.range">距离: {{ a.range }}</span>,
+                                                <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
+                                                <span>伤害: {{ formatDamages(a.damages) }}</span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ a.note || '实用能力' }}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div v-if="!uiState.pcDraft.actions?.length" class="placeholder small">无动作</div>
+                                </div>
+                            </template>
 
-                            <div class="hl"></div>
-
-                            <div class="section-title">动作</div>
-                            <div class="grid" style="gap: 8px;">
-                                <div class="card" v-for="a in sortedPcDraftActions" :key="a.id">
+                            <template v-else>
+                                <template v-if="ui.actionEditor.open && ui.actionEditor.nested">
                                     <div class="row">
-                                        <div class="title">{{ a.name }}</div>
                                         <div class="spacer"></div>
-                                        <span class="tag">{{ a.type }}</span>
+                                        <button class="btn" @click="ui.actionEditor.open=false">关闭</button>
                                     </div>
-                                    <div class="muted small" style="margin-top: 6px;">
-                                        <template v-if="a.type === 'attack'">
-                                            <span>攻击+{{ a.attackBonus }}</span>,
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                        </template>
-                                        <template v-else-if="a.type === 'save'">
-                                            <span v-if="a.range">距离: {{ a.range }}</span>,
-                                            <span>豁免DC {{ a.saveDC }} {{ a.saveAbility?.toUpperCase() }}</span>,
-                                            <span>伤害: {{ formatDamages(a.damages) }}</span>
-                                        </template>
-                                        <template v-else>
-                                            <span>{{ a.note || '实用能力' }}</span>
-                                        </template>
+                                    <div class="hl"></div>
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>动作名称</label>
+                                                <input class="input" style="min-width:160px" v-model="uiState.actionDraft.name"
+                                                    placeholder="动作名称" />
+                                            </div>
+                                            <div class="col">
+                                                <label>类型</label>
+                                                <select class="input" v-model="uiState.actionDraft.type">
+                                                    <option value="attack">攻击检定</option>
+                                                    <option value="save">豁免检定</option>
+                                                    <option value="utility">其他</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="row small" style="gap:12px">
+                                            <template v-if="uiState.actionDraft.type==='attack'">
+                                                <div class="col">
+                                                    <label>攻击加值</label>
+                                                    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.attackBonus" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>攻击距离</label>
+                                                    <input class="input" style="width:90px" v-model="uiState.actionDraft.range" placeholder="例如 5 ft." />
+                                                </div>
+                                                <div class="col" style="grid-column: span 2;">
+                                                    <div class="row">
+                                                        <label>多段伤害</label>
+                                                        <div class="spacer"></div>
+                                                        <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                    </div>
+                                                    <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row" style="margin-top: 4px;">
+                                                        <input class="input mono" style="width:120px" v-model="damage.dice" placeholder="例如 2d6+3" />
+                                                        <select class="input" v-model="damage.type">
+                                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                        </select>
+                                                        <button v-if="index > 0" class="btn danger small" @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <label>充能回合</label>
+                                                    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>命中附加状态</label>
+                                                    <select class="input" v-model="uiState.actionDraft.onHitStatus">
+                                                        <option value="">无</option>
+                                                        <option v-for="s in statusCatalog" :key="s.name" :value="s.name">{{s.name}}</option>
+                                                    </select>
+                                                    <div v-if="uiState.actionDraft.onHitStatus" class="form-row">
+                                                        <label>
+                                                            豁免属性:
+                                                            <select v-model="uiState.actionDraft.onHitSaveAbility">
+                                                                <option value="str">力量 (Strength)</option>
+                                                                <option value="dex">敏捷 (Dexterity)</option>
+                                                                <option value="con">体质 (Constitution)</option>
+                                                                <option value="int">智力 (Intelligence)</option>
+                                                                <option value="wis">感知 (Wisdom)</option>
+                                                                <option value="cha">魅力 (Charisma)</option>
+                                                            </select>
+                                                        </label>
+                                                        <label>
+                                                            豁免DC:
+                                                            <input type="number" v-model.number="uiState.actionDraft.onHitSaveDC" style="width: 60px;">
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col" v-if="uiState.actionDraft.onHitStatus">
+                                                    <label>状态持续回合</label>
+                                                    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.onHitStatusRounds" placeholder="默认1" />
+                                                </div>
+                                            </template>
+                                            <template v-else-if="uiState.actionDraft.type==='save'">
+                                                <div class="col">
+                                                    <label>豁免属性</label>
+                                                    <select class="input" v-model="uiState.actionDraft.saveAbility">
+                                                        <option>str</option>
+                                                        <option>dex</option>
+                                                        <option>con</option>
+                                                        <option>int</option>
+                                                        <option>wis</option>
+                                                        <option>cha</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col">
+                                                    <label>DC</label>
+                                                    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.saveDC" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>攻击距离</label>
+                                                    <input class="input" style="width:90px" v-model="uiState.actionDraft.range" placeholder="例如 30 ft." />
+                                                </div>
+                                                <div class="col" style="grid-column: span 2;">
+                                                    <div class="row">
+                                                        <label>多段伤害</label>
+                                                        <div class="spacer"></div>
+                                                        <button class="btn small" @click="addDamageToActionDraft()">+ 添加伤害</button>
+                                                    </div>
+                                                    <div v-for="(damage, index) in uiState.actionDraft.damages" :key="damage.id" class="row" style="margin-top: 4px;">
+                                                        <input class="input mono" style="width:120px" v-model="damage.dice" placeholder="例如 2d6+3" />
+                                                        <select class="input" v-model="damage.type">
+                                                            <option v-for="dt in damageTypes" :key="dt" :value="dt">{{dt}}</option>
+                                                        </select>
+                                                        <button v-if="index > 0" class="btn danger small" @click="confirm('确定要删除此段伤害吗？') && uiState.actionDraft.damages.splice(index, 1)">删除</button>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <label>充能回合</label>
+                                                    <input type="number" class="input" style="width:90px" v-model.number="uiState.actionDraft.recharge" placeholder="0" />
+                                                </div>
+                                                <div class="col">
+                                                    <label>成功是否半伤</label>
+                                                    <select class="input" v-model="uiState.actionDraft.onSuccess">
+                                                        <option value="half">半伤</option>
+                                                        <option value="none">免疫</option>
+                                                    </select>
+                                                </div>
+                                            </template>
+                                            <template v-else>
+                                                <span class="muted">实用动作，无自动结算</span>
+                                            </template>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <button class="btn ok" @click="saveAction()">保存并关闭</button>
                                     </div>
-                                </div>
-                                <div v-if="!uiState.pcDraft.actions?.length" class="placeholder small">无动作</div>
-                            </div>
-                            <div class="hl"></div>
-                            <div class="row">
-                                <button class="btn ok" @click="savePC()">保存并关闭</button>
-                                <div class="spacer"></div>
-                                <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
-                            </div>
+                                </template>
+
+                                <template v-else-if="ui.actionPool.open && ui.actionPool.nested">
+                                    <div class="toolbar">
+                                        <input class="input" placeholder="搜索动作..." v-model="ui.actionPool.keyword" />
+                                        <button class="btn" @click="openActionEditor(); ui.actionEditor.nested=true">+ 新动作</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="action in filteredActions" :key="action.id">
+                                            <div class="row">
+                                                <div class="title">{{action.name}}</div>
+                                                <span class="pill right">{{action.type}}</span>
+                                            </div>
+                                            <div class="kpi muted small" style="margin-top:6px">
+                                                <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                                <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                                            </div>
+                                            <div class="hl"></div>
+                                            <div class="row">
+                                                <button class="btn" @click="attachActionToDraft(action)">添加到当前生物</button>
+                                                <button class="btn" @click="openActionEditor(action); ui.actionEditor.nested=true">编辑</button>
+                                                <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template v-else-if="ui.abilityPool.open && ui.abilityPool.nested">
+                                    <div class="toolbar">
+                                        <input class="input" placeholder="搜索能力..." v-model="ui.abilityPool.keyword" />
+                                        <button class="btn" @click="openAbilityEditor()">+ 新能力</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="ab in filteredAbilities" :key="ab.id">
+                                            <div class="row">
+                                                <div class="title">{{ab.name}}</div>
+                                                <div class="spacer"></div>
+                                                <button class="btn" @click="attachAbilityToDraft(ab)">添加到当前生物</button>
+                                                <button class="btn" @click="openAbilityEditor(ab)">编辑</button>
+                                                <button class="btn danger" @click="deleteAbility(ab.id)">删除</button>
+                                            </div>
+                                            <div class="muted small" style="margin-top:6px">{{ab.description}}</div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template v-else>
+                                    <div class="row" style="margin-bottom: 8px;">
+                                        <button class="btn primary" @click="openActionEditorForDraft()">+ 新建私有动作</button>
+                                        <button class="btn" @click="openActionPool()">从动作库添加</button>
+                                        <button class="btn" @click="openAbilityPool()">从能力池添加</button>
+                                    </div>
+                                    <div class="grid cards">
+                                        <div class="card" v-for="(a, idx) in ui.actionsViewer.draft.actions" :key="a.id || idx">
+                                            <div class="row">
+                                                <div class="title">{{a.name}}</div>
+                                                <span class="pill right">{{a.type}}</span>
+                                                <div class="spacer"></div>
+                                                <button class="btn" @click="openActionEditorForDraft(a)">编辑</button>
+                                                <button class="btn danger" @click="ui.actionsViewer.draft.actions.splice(idx,1)">删除</button>
+                                            </div>
+                                            <div class="kpi muted small" style="margin-top:6px">
+                                                <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
+                                                <span class="pill" v-if="a.range">距离: {{a.range}}</span>
+                                                <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
+                                                <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="!ui.actionsViewer.draft.actions?.length" class="placeholder small">暂无动作</div>
+                                    </div>
+                                </template>
+                            </template>
                         </div>
-                    </div>
-                </div>
-
-                <!-- 编辑模式 -->
-                <div v-if="ui.pcEditor.mode === 'edit'">
-                    <div
-                        style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <input type="file" ref="pcAvatarUpload" @change="onAvatarImageSelect" accept="image/*" hidden>
-                        <div class="avatar" style="width: 80px; height: 80px; font-size: 40px; cursor: pointer;"
-                            @click="$refs.pcAvatarUpload.click()">
-                            <img v-if="uiState.pcDraft.avatar" :src="uiState.pcDraft.avatar" alt="Avatar"
-                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                            <span v-else>🧝</span>
-                        </div>
-                        <button class="btn small" @click="$refs.pcAvatarUpload.click()">上传/更换头像</button>
-                    </div>
-                    <div class="two-col">
-                        <div class="col"><label>名称</label><input class="input" v-model="uiState.pcDraft.name" /></div>
-                        <div class="col"><label>AC</label><input type="number" class="input"
-                                v-model.number="uiState.pcDraft.ac" /></div>
-                        <div class="col"><label>HP 最大</label><input type="number" class="input"
-                                v-model.number="uiState.pcDraft.hpMax" /></div>
-                        <div class="col"><label>HP 当前</label><input type="number" class="input"
-                                v-model.number="uiState.pcDraft.hpCurrent" /></div>
-                    </div>
-                    <div class="section-title">六大属性</div>
-                    <div class="ability-grid">
-                        <div class="ability" v-for="k in ['str','dex','con','int','wis','cha']" :key="k">
-                            <div class="muted small">{{k.toUpperCase()}}</div>
-                            <input type="number" class="input" style="width:80px"
-                                v-model.number="uiState.pcDraft.abilities[k]" />
-                        </div>
-                    </div>
-
-                    <details>
-                        <summary class="section-title">抗性/易伤/免疫（伤害/状态）</summary>
-                        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 8px;">
-                            <div class="col">
-                                <label>伤害抗性</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.pcDraft.resistances.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('resistances', dt)">
-                                        {{ dt }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label>伤害易伤</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.pcDraft.vulnerabilities.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('vulnerabilities', dt)">
-                                        {{ dt }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label>伤害免疫</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="dt in damageTypes" :key="dt" class="chip"
-                                        :class="{active: uiState.pcDraft.immunities.damage.includes(dt)}"
-                                        @click="toggleDamageModifier('immunities', dt)">
-                                        {{ dt }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label>状态免疫</label>
-                                <div class="row" style="flex-wrap: wrap; gap: 6px;">
-                                    <span v-for="ct in conditionTypes" :key="ct" class="chip"
-                                        :class="{active: uiState.pcDraft.immunities.conditions.includes(ct)}"
-                                        @click="toggleConditionImmunity(ct)">
-                                        {{ ct }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-
-                    <div class="section-title row">
-                        <span>特性</span>
-                    </div>
-                    <textarea class="input underline-input" rows="3" v-model="uiState.pcDraft.features"
-                        placeholder="输入角色的特性、背景、关键信息等..."></textarea>
-
-                    <div class="section-title row">
-                        <span>动作</span>
-                        <div class="spacer"></div>
-                        <button class="btn small"
-                            @click.prevent="openActionsViewer(uiState.pcDraft, 'pc')">管理动作</button>
-                    </div>
-
-                    <div class="hl"></div>
-                    <div class="row">
-                        <button class="btn ok" @click="savePC()">保存并关闭</button>
-                        <div class="spacer"></div>
-                        <label class="row" style="cursor:pointer; margin-right: 16px;">
-                            <input type="checkbox" v-model="uiState.pcDraft.isDefault">
-                            <span>设置为默认参战</span>
-                        </label>
-                        <button class="btn" @click="addToBattleFromEditor(uiState.pcDraft, 'pc')">加入战斗并关闭</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 模态：动作编辑 -->
-        <div class="modal-mask" v-if="ui.actionEditor.open" :style="{ zIndex: ui.actionEditor.nested ? 65 : 50 }">
+        <div class="modal-mask" v-if="ui.actionEditor.open && !(ui.monsterEditor.open || ui.pcEditor.open) && route !== 'actions'" :style="{ zIndex: ui.actionEditor.nested ? 65 : 50 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">编辑动作</div>

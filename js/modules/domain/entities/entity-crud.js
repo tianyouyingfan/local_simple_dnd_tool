@@ -11,15 +11,38 @@ import { openActionsViewer } from 'actor-viewer';
 
 const { toast } = useToasts();
 
+function closeEntityEditorOverlays() {
+    ui.actionPool.open = false;
+    ui.actionPool.nested = false;
+    ui.actionPool.keyword = '';
+
+    ui.abilityPool.open = false;
+    ui.abilityPool.nested = false;
+    ui.abilityPool.keyword = '';
+
+    ui.actionEditor.open = false;
+    ui.actionEditor.nested = false;
+
+    ui.abilityEditor.open = false;
+    ui.abilityEditor.nested = false;
+}
+
 /** ---------- Monster CRUD ---------- */
 export function openMonsterEditor(m = null) {
     const draft = deepClone(m || emptyMonster());
     draft.isCustom = !!draft.isCustom;
     uiState.monsterDraft = draft;
     uiState.targetCR = draft.cr;
+    ui.actionsViewer.draft = uiState.monsterDraft;
     ui.monsterEditor.mode = m ? 'view' : 'edit';
     ui.activeEditor = 'monster';
     ui.monsterEditor.open = true;
+}
+
+export function closeMonsterEditor() {
+    ui.monsterEditor.open = false;
+    if (ui.activeEditor === 'monster') ui.activeEditor = null;
+    closeEntityEditorOverlays();
 }
 
 export async function updateMonster() {
@@ -28,7 +51,7 @@ export async function updateMonster() {
     if (!draft.name) return toast('名称不能为空');
     await db.monsters.put(draft);
     await loadAll();
-    ui.monsterEditor.open = false;
+    closeMonsterEditor();
     toast('怪物数据已更新');
 }
 
@@ -39,7 +62,7 @@ export async function saveMonsterAsNew() {
     if (!draft.name) return toast('名称不能为空');
     await db.monsters.add(draft);
     await loadAll();
-    ui.monsterEditor.open = false;
+    closeMonsterEditor();
     toast('已保存为自定义怪物');
 }
 
@@ -87,7 +110,14 @@ export function openPCEditor(pc = null) {
         ui.pcEditor.mode = 'edit';
     }
     ui.activeEditor = 'pc';
+    ui.actionsViewer.draft = uiState.pcDraft;
     ui.pcEditor.open = true;
+}
+
+export function closePCEditor() {
+    ui.pcEditor.open = false;
+    if (ui.activeEditor === 'pc') ui.activeEditor = null;
+    closeEntityEditorOverlays();
 }
 
 export async function savePC() {
@@ -96,7 +126,7 @@ export async function savePC() {
     if (draft.id) await db.pcs.put(draft);
     else { draft.id = undefined; await db.pcs.add(draft); }
     await loadAll();
-    ui.pcEditor.open = false;
+    closePCEditor();
     toast('PC已保存');
 }
 
@@ -109,8 +139,10 @@ export async function deletePC(id) {
 
 /** ---------- Ability & Action libraries ---------- */
 export function openAbilityPool() {
-    ui.abilityPool.nested = ui.monsterEditor.open || ui.pcEditor.open || ui.actionsViewer.open;
+    ui.abilityPool.nested = ui.monsterEditor.open || ui.pcEditor.open;
     ui.abilityPool.open = true;
+    ui.actionPool.open = false;
+    if (ui.actionEditor.open && ui.actionEditor.nested) ui.actionEditor.open = false;
 }
 
 export function openAbilityEditor(ab = null) {
@@ -137,20 +169,24 @@ export async function deleteAbility(id) {
 }
 
 export function attachAbilityToDraft(ab) {
-    uiState.monsterDraft.actions ||= [];
-    uiState.monsterDraft.actions.push({
+    const draft = ui.actionsViewer.draft || (ui.activeEditor === 'pc' ? uiState.pcDraft : uiState.monsterDraft);
+    if (!draft) return;
+    draft.actions ||= [];
+    draft.actions.push({
         id: crypto.randomUUID(),
         name: ab.name,
         type: 'utility',
         note: ab.description
     });
-    toast('已添加到当前怪物动作/能力中');
+    toast('已添加到当前生物动作/能力中');
     ui.abilityPool.open = false;
 }
 
 export function openActionPool() {
-    ui.actionPool.nested = ui.pcEditor.open || ui.monsterEditor.open || ui.actionsViewer.open;
+    ui.actionPool.nested = ui.pcEditor.open || ui.monsterEditor.open;
     ui.actionPool.open = true;
+    ui.abilityPool.open = false;
+    if (ui.actionEditor.open && ui.actionEditor.nested) ui.actionEditor.open = false;
 }
 
 export function attachActionToDraft(action) {
