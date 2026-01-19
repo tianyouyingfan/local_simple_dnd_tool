@@ -212,6 +212,14 @@ select,
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
 }
 
+.cards.cards-dense {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))
+}
+
+.cards.cards-dense .card {
+    padding: 10px
+}
+
 .card {
     background: var(--card);
     border: 1px solid #2a2e34;

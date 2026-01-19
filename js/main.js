@@ -115,6 +115,14 @@ createApp({
       }
     });
 
+    watch(route, (newRoute, oldRoute) => {
+      if (oldRoute !== 'actions') return;
+      if (newRoute === 'actions') return;
+      if (!ui.actionEditor.open) return;
+      if (ui.actionEditor.nested) return;
+      ui.actionEditor.open = false;
+    });
+
     watch(() => battle.currentIndex, () => { hpDelta.value = 5; });
 
     // participantTiles 清理

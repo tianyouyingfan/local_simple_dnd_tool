@@ -114,45 +114,45 @@
 
             <!-- 动作库 -->
             <section v-if="route==='actions'">
-                <div class="split-page">
-                    <div class="split-pane">
-                        <div class="split-pane-header">
-                            <div class="title">动作库</div>
-                            <div class="spacer"></div>
-                            <button class="btn" @click="openActionEditor()">+ 新建动作</button>
-                        </div>
-                        <div class="split-pane-body">
-                            <div class="grid cards">
-                                <div class="card" v-for="action in actions" :key="action.id">
-                                    <div class="row">
-                                        <div class="title">{{action.name}}</div>
-                                        <span class="pill right">{{action.type}}</span>
-                                    </div>
-                                    <div class="kpi muted small" style="margin-top:6px">
-                                        <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
-                                        <span class="pill" v-if="action.range">距离: {{action.range}}</span>
-                                        <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
-                                        <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
-                                    </div>
-                                    <div class="hl"></div>
-                                    <div class="row">
-                                        <button class="btn" @click="openActionEditor(action)">编辑</button>
-                                        <div class="spacer"></div>
-                                        <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                <template v-if="ui.actionEditor.open">
+                    <div class="split-page">
+                        <div class="split-pane">
+                            <div class="split-pane-header">
+                                <div class="title">动作库</div>
+                                <div class="spacer"></div>
+                                <button class="btn" @click="openActionEditor()">+ 新建动作</button>
+                            </div>
+                            <div class="split-pane-body">
+                                <div class="grid cards cards-dense">
+                                    <div class="card" v-for="action in actions" :key="action.id">
+                                        <div class="row">
+                                            <div class="title">{{action.name}}</div>
+                                            <span class="pill right">{{action.type}}</span>
+                                        </div>
+                                        <div class="kpi muted small" style="margin-top:6px">
+                                            <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                                            <span class="pill" v-if="action.range">距离: {{action.range}}</span>
+                                            <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                            <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                                        </div>
+                                        <div class="hl"></div>
+                                        <div class="row">
+                                            <button class="btn" @click="openActionEditor(action)">编辑</button>
+                                            <div class="spacer"></div>
+                                            <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="split-pane">
-                        <div class="split-pane-header">
-                            <div class="title">编辑动作</div>
-                            <div class="spacer"></div>
-                            <button class="btn" v-if="ui.actionEditor.open" @click="ui.actionEditor.open=false">关闭</button>
-                        </div>
-                        <div class="split-pane-body">
-                            <div v-if="ui.actionEditor.open">
+                        <div class="split-pane">
+                            <div class="split-pane-header">
+                                <div class="title">编辑动作</div>
+                                <div class="spacer"></div>
+                                <button class="btn" @click="ui.actionEditor.open=false">退出编辑</button>
+                            </div>
+                            <div class="split-pane-body">
                                 <div class="col">
                                     <div class="row">
                                         <div class="col">
@@ -292,13 +292,37 @@
                                         </template>
                                     </div>
                                     <div class="hl"></div>
-                                    <button class="btn ok" @click="saveAction()">保存并关闭</button>
+                                    <button class="btn ok" @click="saveAction()">保存并退出</button>
                                 </div>
                             </div>
-                            <div v-else class="placeholder">选择一个动作或新建动作</div>
                         </div>
                     </div>
-                </div>
+                </template>
+                <template v-else>
+                    <div class="toolbar">
+                        <button class="btn" @click="openActionEditor()">+ 新建动作</button>
+                    </div>
+                    <div class="grid cards cards-dense">
+                        <div class="card" v-for="action in actions" :key="action.id">
+                            <div class="row">
+                                <div class="title">{{action.name}}</div>
+                                <span class="pill right">{{action.type}}</span>
+                            </div>
+                            <div class="kpi muted small" style="margin-top:6px">
+                                <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
+                                <span class="pill" v-if="action.range">距离: {{action.range}}</span>
+                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
+                            </div>
+                            <div class="hl"></div>
+                            <div class="row">
+                                <button class="btn" @click="openActionEditor(action)">编辑</button>
+                                <div class="spacer"></div>
+                                <button class="btn danger" @click="deleteAction(action.id)">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </section>
 
             <!-- 战斗主界面（三区布局） -->
