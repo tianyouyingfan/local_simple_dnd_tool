@@ -221,10 +221,15 @@ export async function runAction() {
                             const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
                             if (existing) {
                                 const nextLevel = Number(instance.meta?.level) || prevLevel;
+                                const appliedRounds = Math.max(1, Math.floor(Number(instance.rounds) || 1));
                                 existing.meta = { ...(existing.meta || {}) };
                                 existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
-                                existing.rounds = Math.max(Number(existing.rounds) || 1, Number(instance.rounds) || 1);
-                                existing.name = instance.name;
+                                if (existing.meta.stepRounds == null) {
+                                    existing.meta.stepRounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+                                }
+                                existing.meta.stepRounds = Math.max(Math.floor(Number(existing.meta.stepRounds) || 1), appliedRounds);
+                                existing.rounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+                                existing.name = `力竭 ${existing.meta.level}级`;
                                 existing.icon = instance.icon;
                                 applyExhaustionHpCap(t);
                                 if (prevLevel < 6 && existing.meta.level === 6) {
@@ -238,6 +243,11 @@ export async function runAction() {
                         const identity = getStatusIdentity(instance).identity;
                         if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) return;
 
+                        if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
+                            instance.meta = { ...(instance.meta || {}) };
+                            instance.meta.stepRounds = Math.max(1, Math.floor(Number(instance.meta.stepRounds ?? instance.rounds) || 1));
+                            if (instance.meta.level) instance.name = `力竭 ${instance.meta.level}级`;
+                        }
                         t.statuses.push(instance);
                         log += `  -> ${t.name} 获得了状态: ${action.onHitStatus}.\n`;
                     };

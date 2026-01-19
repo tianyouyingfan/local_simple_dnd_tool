@@ -6,7 +6,7 @@ import { deepClone, rollSingleInitiative } from 'utils';
 import { sortParticipantsByInitiative } from 'helpers';
 import { useToasts } from 'use-toasts';
 import { applyExhaustionHpCap } from 'hp-status';
-import { getExhaustionLevel } from 'conditions';
+import { CONDITION_KEYS, getExhaustionLevel } from 'conditions';
 
 const { toast } = useToasts();
 
@@ -130,9 +130,40 @@ export function setCurrentActor(uid) {
 
 export function decrementParticipantStatuses(participant) {
     const prevExhaustion = getExhaustionLevel(participant);
-    participant.statuses = participant.statuses
-        .map(s => ({ ...s, rounds: s.rounds - 1 }))
-        .filter(s => s.rounds > 0);
+    participant.statuses = (participant.statuses || [])
+        .map((s) => {
+            if (!s) return null;
+
+            const rawRounds = Number(s.rounds);
+            const rounds = Number.isFinite(rawRounds) ? Math.floor(rawRounds) : 1;
+            const nextRounds = rounds - 1;
+
+            if (s.key === CONDITION_KEYS.EXHAUSTION) {
+                const rawLevel = Number(s.meta?.level);
+                const level = Number.isFinite(rawLevel) ? Math.floor(rawLevel) : 1;
+
+                if (nextRounds > 0) return { ...s, rounds: nextRounds };
+
+                if (level > 1) {
+                    const rawStepRounds = Number(s.meta?.stepRounds);
+                    const stepRounds = Number.isFinite(rawStepRounds) ? Math.floor(rawStepRounds) : 1;
+                    const resetRounds = Math.max(1, stepRounds);
+                    const nextLevel = level - 1;
+                    return {
+                        ...s,
+                        rounds: resetRounds,
+                        meta: { ...(s.meta || {}), level: nextLevel, stepRounds: resetRounds },
+                        name: `力竭 ${nextLevel}级`,
+                    };
+                }
+
+                return null;
+            }
+
+            if (nextRounds > 0) return { ...s, rounds: nextRounds };
+            return null;
+        })
+        .filter(Boolean);
     const nextExhaustion = getExhaustionLevel(participant);
     if (prevExhaustion !== nextExhaustion) {
         applyExhaustionHpCap(participant);

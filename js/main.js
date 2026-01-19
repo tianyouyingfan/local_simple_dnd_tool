@@ -60,6 +60,7 @@ import {
 import { setupKeyboardShortcuts } from 'keyboard-shortcuts';
 import { useComputed } from 'use-computed';
 import {
+  CONDITION_KEYS,
   buildStatusDisplayName,
   getConditionDefinition,
   getConditionKeyEffectsHtml,
@@ -67,6 +68,7 @@ import {
   isActorIncapacitated,
   isManualOrPartialCondition,
   isSaveDisadvantageTarget,
+  getExhaustionLevel,
   normalizeStatusInstance
 } from 'conditions';
 
@@ -134,9 +136,30 @@ createApp({
           for (const p of battle.participants || []) {
             if (!Array.isArray(p.statuses)) p.statuses = [];
             p.statuses = p.statuses.map(normalizeStatusInstance).filter(Boolean);
+            for (const s of p.statuses) {
+              if (s?.key !== CONDITION_KEYS.EXHAUSTION) continue;
+              s.meta = { ...(s.meta || {}) };
+              if (s.meta.stepRounds == null) {
+                s.meta.stepRounds = Math.max(1, Math.floor(Number(s.rounds) || 1));
+              }
+              if (s.meta.level) s.name = `力竭 ${s.meta.level}级`;
+            }
             // M1迁移: 为旧存档补充baseMaxHp字段
+            const ex = getExhaustionLevel(p);
+            const hpMax = Number(p.hpMax);
+            const baseMaxHp = Number(p.baseMaxHp);
+            if (ex != null && ex >= 4 && Number.isFinite(hpMax) && hpMax > 0) {
+              if (!Number.isFinite(baseMaxHp) || baseMaxHp <= hpMax) {
+                p.baseMaxHp = hpMax * 2;
+                pendingBaseMaxHpFixUids.push(p.uid);
+              }
+            }
             if (p.baseMaxHp == null) {
-              p.baseMaxHp = p.hpMax;
+              if (Number.isFinite(hpMax) && hpMax > 0) {
+                p.baseMaxHp = (ex != null && ex >= 4) ? (hpMax * 2) : hpMax;
+              } else {
+                p.baseMaxHp = 10;
+              }
               pendingBaseMaxHpFixUids.push(p.uid);
             }
             applyExhaustionHpCap(p);

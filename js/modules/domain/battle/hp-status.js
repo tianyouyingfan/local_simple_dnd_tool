@@ -72,7 +72,12 @@ export function confirmExhaustionDeath(confirmed) {
     } else if (!confirmed && target) {
         // 取消则回退到5级
         const exStatus = target.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
-        if (exStatus && exStatus.meta) exStatus.meta.level = 5;
+        if (exStatus) {
+            exStatus.meta = { ...(exStatus.meta || {}) };
+            exStatus.meta.level = 5;
+            if (exStatus.meta.stepRounds == null) exStatus.meta.stepRounds = Math.max(1, Math.floor(Number(exStatus.rounds) || 1));
+            exStatus.name = '力竭 5级';
+        }
         toast(`已取消，【${target.name}】力竭等级保持在5级。`);
     }
     ui.exhaustionDeathConfirm.open = false;
@@ -133,10 +138,15 @@ export function applyStatus() {
         const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
         if (existing) {
             const nextLevel = Number(instance.meta?.level) || prevLevel;
+            const appliedRounds = Math.max(1, Math.floor(Number(instance.rounds) || 1));
             existing.meta = { ...(existing.meta || {}) };
             existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
-            existing.rounds = Math.max(Number(existing.rounds) || 1, Number(instance.rounds) || 1);
-            existing.name = instance.name;
+            if (existing.meta.stepRounds == null) {
+                existing.meta.stepRounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+            }
+            existing.meta.stepRounds = Math.max(Math.floor(Number(existing.meta.stepRounds) || 1), appliedRounds);
+            existing.rounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+            existing.name = `力竭 ${existing.meta.level}级`;
             existing.icon = instance.icon;
             ui.statusPicker.open = false;
             applyExhaustionHpCap(t);
@@ -158,6 +168,9 @@ export function applyStatus() {
 
     // 力竭特殊处理
     if (instance.key === CONDITION_KEYS.EXHAUSTION) {
+        instance.meta = { ...(instance.meta || {}) };
+        instance.meta.stepRounds = Math.max(1, Math.floor(Number(instance.meta.stepRounds ?? instance.rounds) || 1));
+        if (instance.meta.level) instance.name = `力竭 ${instance.meta.level}级`;
         applyExhaustionHpCap(t);
         // 力竭6级死亡确认
         if (instance.meta?.level === 6) {
