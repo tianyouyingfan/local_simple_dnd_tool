@@ -5,12 +5,13 @@ import { onBeforeUnmount } from 'vue';
 import { isTypingInInput } from 'helpers';
 import { openQuickDice } from 'quick-dice';
 import { nextTurn, prevTurn } from 'battle-core';
-import { ui, uiState } from 'state';
+import { route, ui, uiState } from 'state';
 import { cancelActorViewerEdit, saveActorViewerChanges } from 'actor-viewer';
 import { closeMonsterEditor, closePCEditor, saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
+import { runAction } from 'action-execution';
 
 export function setupKeyboardShortcuts() {
-    let lastD = 0, lastR = 0, lastL = 0;
+    let lastD = 0, lastA = 0, lastR = 0, lastL = 0;
     let lastSpace = 0;
     let lastQ = 0;
     let lastQKey = 'q';
@@ -41,6 +42,20 @@ export function setupKeyboardShortcuts() {
         ui.pcEditor.open ||
         ui.actionEditor.open ||
         ui.abilityEditor.open
+    );
+
+    const isBattleKeyAllowed = () => (
+        route.value === 'battle' &&
+        !isEditorContextOpen() &&
+        !ui.saveCheck.open &&
+        !ui.binaryPrompt.open &&
+        !ui.saveOutcomePicker.open &&
+        !ui.exhaustionDeathConfirm.open &&
+        !ui.critNotification.open &&
+        !ui.normalHitNotification.open &&
+        !ui.missNotification.open &&
+        !ui.quickDice.inputOpen &&
+        !ui.quickDice.resultOpen
     );
 
     const saveAndCloseEditorContext = () => {
@@ -117,6 +132,10 @@ export function setupKeyboardShortcuts() {
         if (e.key.toLowerCase() === 'd') {
             if (now - lastD < DOUBLE_TAP_MS) { openQuickDice(); lastD = 0; }
             else lastD = now;
+        } else if (e.key.toLowerCase() === 'a') {
+            if (!isBattleKeyAllowed()) return;
+            if (now - lastA < DOUBLE_TAP_MS) { runAction(); lastA = 0; }
+            else lastA = now;
         } else if (e.key === 'ArrowRight') {
             if (now - lastR < DOUBLE_TAP_MS) { nextTurn(); lastR = 0; }
             else lastR = now;
