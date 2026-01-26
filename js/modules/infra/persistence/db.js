@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import { newId } from 'helpers';
 
 // Dexie 初始化
 export const db = new Dexie('dnd-assist-v2');
@@ -61,14 +62,14 @@ export async function seedIfEmpty() {
             conditions: []
         },
         actions: [{
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '弯刀',
             type: 'attack',
             attackBonus: 4,
             damageDice: '1d6+2',
             damageType: '斩击'
         }, {
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '短弓',
             type: 'attack',
             attackBonus: 4,
@@ -109,14 +110,14 @@ export async function seedIfEmpty() {
             conditions: []
         },
         actions: [{
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '巨棍',
             type: 'attack',
             attackBonus: 6,
             damageDice: '2d8+4',
             damageType: '钝击'
         }, {
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '标枪',
             type: 'attack',
             attackBonus: 6,
@@ -158,14 +159,14 @@ export async function seedIfEmpty() {
             conditions: []
         },
         actions: [{
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '咬击',
             type: 'attack',
             attackBonus: 14,
             damageDice: '2d10+8',
             damageType: '穿刺'
         }, {
-            id: crypto.randomUUID(),
+            id: newId(),
             name: '吐息武器',
             type: 'save',
             saveAbility: 'dex',

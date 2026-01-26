@@ -1,3 +1,5 @@
+import { newId } from 'helpers';
+
 export const CONDITION_KEYS = Object.freeze({
   BLINDED: 'blinded',
   CHARMED: 'charmed',
@@ -322,7 +324,7 @@ export function normalizeStatusInstance(raw) {
   rounds = Math.floor(rounds);
   if (rounds < 1) rounds = 1;
   return {
-    id: raw.id || crypto.randomUUID(),
+    id: raw.id || newId(),
     key,
     name: raw.name || (key ? conditionDefinitions[key]?.displayName : ''),
     icon,

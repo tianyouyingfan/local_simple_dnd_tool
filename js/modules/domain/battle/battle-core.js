@@ -3,7 +3,7 @@
  */
 import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from 'state';
 import { deepClone, rollSingleInitiative } from 'utils';
-import { sortParticipantsByInitiative } from 'helpers';
+import { sortParticipantsByInitiative, newId } from 'helpers';
 import { useToasts } from 'use-toasts';
 import { applyExhaustionHpCap } from 'hp-status';
 import { CONDITION_KEYS, getExhaustionLevel } from 'conditions';
@@ -34,7 +34,7 @@ function ensureUniqueParticipantName(participant) {
 }
 
 export function standardizeToParticipant(x) {
-    const uid = crypto.randomUUID();
+    const uid = newId();
     const isPc = !!x.hpMax;
     const resolvedHpMax = x.hpMax ?? x.hp?.average ?? 10;
     return {
@@ -297,4 +297,3 @@ export function onDrop(idx) {
     battle.participants.splice(idx, 0, item);
     battle.dragIndex = null;
 }
-

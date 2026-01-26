@@ -83,12 +83,12 @@ createApp({
     // 2. Watchers
     // battle 持久化
     let persistTimer = null;
-    watch(battle, (newState) => {
+    watch(battle, () => {
       if (persistTimer) return;
       persistTimer = setTimeout(() => {
         persistTimer = null;
         try {
-          localStorage.setItem('dnd-battle-state', JSON.stringify(newState));
+          localStorage.setItem('dnd-battle-state', JSON.stringify(battle));
         } catch (e) {
           console.error('Failed to persist battle state:', e);
         }
@@ -179,8 +179,13 @@ createApp({
         console.error('Failed to load battle state:', e);
         localStorage.removeItem('dnd-battle-state');
       }
-      await seedIfEmpty();
-      await loadAll();
+      try {
+        await seedIfEmpty();
+        await loadAll();
+      } catch (e) {
+        console.error('Failed to load IndexedDB data:', e);
+        toast('数据加载失败：请检查浏览器存储权限或退出无痕模式');
+      }
 
       if (pendingBaseMaxHpFixUids.length) {
         for (const uid of pendingBaseMaxHpFixUids) {

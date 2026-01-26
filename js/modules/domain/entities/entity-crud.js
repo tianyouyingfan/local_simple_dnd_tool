@@ -4,7 +4,7 @@
 import { db } from 'db';
 import { ui, uiState, emptyMonster, actions, abilities, pcs } from 'state';
 import { deepClone } from 'utils';
-import { ensureActionDamages } from 'helpers';
+import { ensureActionDamages, newId } from 'helpers';
 import { loadAll } from 'data-loader';
 import { useToasts } from 'use-toasts';
 import { openActionsViewer } from 'actor-viewer';
@@ -181,7 +181,7 @@ export function attachAbilityToDraft(ab) {
     if (!draft) return;
     draft.actions ||= [];
     draft.actions.push({
-        id: crypto.randomUUID(),
+        id: newId(),
         name: ab.name,
         type: 'utility',
         note: ab.description
@@ -216,12 +216,12 @@ function openActionEditorBase({ action = null, nested, saveTarget, ensurePrivate
         uiState.actionDraft = draft;
     } else {
         uiState.actionDraft = ensureActionDamages({
-            ...(ensurePrivateId ? { id: crypto.randomUUID() } : {}),
+            ...(ensurePrivateId ? { id: newId() } : {}),
             name: '新动作',
             type: 'attack',
             attackBonus: 4,
             range: '近战',
-            damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
+            damages: [{ dice: '1d6+2', type: '斩击', id: newId() }],
             recharge: 0,
             saveAbility: 'dex',
             saveDC: 13,
@@ -268,7 +268,7 @@ export async function saveAction() {
 }
 
 export function addDamageToActionDraft() {
-    uiState.actionDraft?.damages?.push({ dice: '', type: '斩击', id: crypto.randomUUID() });
+    uiState.actionDraft?.damages?.push({ dice: '', type: '斩击', id: newId() });
 }
 
 export async function deleteAction(id) {
@@ -277,4 +277,3 @@ export async function deleteAction(id) {
     actions.value = await db.actions.toArray();
     toast('已删除');
 }
-

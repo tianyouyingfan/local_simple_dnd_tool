@@ -20,6 +20,12 @@ export function safeJsonParse(text, fallback = null) {
     try { return JSON.parse(text); } catch { return fallback; }
 }
 
+export function newId() {
+    const c = globalThis?.crypto;
+    if (typeof c?.randomUUID === 'function') return c.randomUUID();
+    return `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function validateImageFile(file, { maxBytes }) {
     if (!file) return { valid: false, message: '没有选择文件' };
 
@@ -62,14 +68,14 @@ export function sortParticipantsByInitiative(list) {
 export function ensureActionDamages(draft) {
     // 兼容旧字段 damageDice/damageType -> damages[]
     if (draft?.damageDice && (!draft.damages || draft.damages.length === 0)) {
-        draft.damages = [{ dice: draft.damageDice, type: draft.damageType, id: crypto.randomUUID() }];
+        draft.damages = [{ dice: draft.damageDice, type: draft.damageType, id: newId() }];
         delete draft.damageDice;
         delete draft.damageType;
     }
     if (!draft.damages || draft.damages.length === 0) {
-        draft.damages = [{ dice: '', type: '斩击', id: crypto.randomUUID() }];
+        draft.damages = [{ dice: '', type: '斩击', id: newId() }];
     } else {
-        draft.damages.forEach(d => { d.id = d.id || crypto.randomUUID(); });
+        draft.damages.forEach(d => { d.id = d.id || newId(); });
     }
     return draft;
 }

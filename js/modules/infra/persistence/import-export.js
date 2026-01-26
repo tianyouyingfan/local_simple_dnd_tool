@@ -19,10 +19,11 @@ export async function exportAll() {
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    a.href = url;
     a.download = `dnd-local-v2-export-${Date.now()}.json`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function importAll(e) {
@@ -30,10 +31,16 @@ export async function importAll(e) {
     if (!file) return;
 
     try {
-        const data = safeJsonParse(await file.text());
-        if (!data?.monsters || !data?.abilities || !data?.pcs || !data?.actions || !data?.monsterGroups) {
-            throw new Error('格式不完整');
-        }
+        const raw = safeJsonParse(await file.text());
+        const data = {
+            monsters: Array.isArray(raw?.monsters) ? raw.monsters : [],
+            abilities: Array.isArray(raw?.abilities) ? raw.abilities : [],
+            pcs: Array.isArray(raw?.pcs) ? raw.pcs : [],
+            actions: Array.isArray(raw?.actions) ? raw.actions : [],
+            monsterGroups: Array.isArray(raw?.monsterGroups) ? raw.monsterGroups : [],
+        };
+        const hasAny = Object.values(data).some(list => Array.isArray(list) && list.length > 0);
+        if (!hasAny) throw new Error('格式不完整');
         if (!confirm('导入将清空并替换当前的怪物库、PC库、能力库、动作库和怪物组合。确定要继续吗？')) return;
 
         await db.transaction('rw', db.monsters, db.abilities, db.pcs, db.actions, db.monsterGroups, async () => {

@@ -1,12 +1,9 @@
 /**
  * 快速骰子模块
  */
-import { ref, nextTick } from 'vue';
-import { ui } from 'state';
+import { nextTick } from 'vue';
+import { ui, quickRollInput } from 'state';
 import { rollExpression } from 'utils';
-
-// 需要导出的 ref
-export const quickRollInput = ref(null);
 
 export function openQuickDice() {
     ui.quickDice.expression = '';

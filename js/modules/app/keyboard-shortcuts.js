@@ -137,9 +137,11 @@ export function setupKeyboardShortcuts() {
             if (now - lastA < DOUBLE_TAP_MS) { runAction(); lastA = 0; }
             else lastA = now;
         } else if (e.key === 'ArrowRight') {
+            if (!isBattleKeyAllowed()) return;
             if (now - lastR < DOUBLE_TAP_MS) { nextTurn(); lastR = 0; }
             else lastR = now;
         } else if (e.key === 'ArrowLeft') {
+            if (!isBattleKeyAllowed()) return;
             if (now - lastL < DOUBLE_TAP_MS) { prevTurn(); lastL = 0; }
             else lastL = now;
         }
@@ -148,4 +150,3 @@ export function setupKeyboardShortcuts() {
     window.addEventListener('keydown', onKeyDown);
     onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown));
 }
-

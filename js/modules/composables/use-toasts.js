@@ -2,6 +2,7 @@
  * Toast 通知功能 Composable
  */
 import { ui } from 'state';
+import { newId } from 'helpers';
 
 export function useToasts() {
     function removeToast(id) {
@@ -10,7 +11,7 @@ export function useToasts() {
     }
 
     function toast(message) {
-        const id = crypto.randomUUID();
+        const id = newId();
         ui.toasts.push({ id, message });
         setTimeout(() => removeToast(id), 3000);
     }
