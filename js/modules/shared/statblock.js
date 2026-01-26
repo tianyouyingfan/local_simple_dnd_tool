@@ -126,7 +126,8 @@ export function formatActionBody(action) {
         if (action.range) parts.push(`距离 ${action.range}`);
         if (action.damages) parts.push(`伤害 ${formatDamages(action.damages)}`);
         const base = parts.join('，');
-        return note ? `${base}；${note}` : base;
+        if (!note) return base;
+        return base ? `${base}；${note}` : note;
     }
     if (action.type === 'save') {
         const parts = [];
@@ -137,7 +138,8 @@ export function formatActionBody(action) {
         if (action.damages) parts.push(`伤害 ${formatDamages(action.damages)}`);
         if (action.onSuccess === 'half') parts.push('成功则半伤');
         const base = parts.join('，');
-        return note ? `${base}；${note}` : base;
+        if (!note) return base;
+        return base ? `${base}；${note}` : note;
     }
     return note;
 }

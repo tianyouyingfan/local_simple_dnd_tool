@@ -132,7 +132,7 @@
                                         <div class="kpi muted small" style="margin-top:6px">
                                             <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
                                             <span class="pill" v-if="action.range">距离: {{action.range}}</span>
-                                            <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                            <span class="pill" v-if="action.type !== 'utility' && action.damages?.length">{{ formatDamages(action.damages) }}</span>
                                             <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                                         </div>
                                         <div class="hl"></div>
@@ -328,7 +328,7 @@
                             <div class="kpi muted small" style="margin-top:6px">
                                 <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
                                 <span class="pill" v-if="action.range">距离: {{action.range}}</span>
-                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                <span class="pill" v-if="action.type !== 'utility' && action.damages?.length">{{ formatDamages(action.damages) }}</span>
                                 <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                             </div>
                             <div class="hl"></div>
@@ -1247,7 +1247,7 @@
                                             </div>
                                             <div class="kpi muted small" style="margin-top:6px">
                                                 <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
-                                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                                <span class="pill" v-if="action.type !== 'utility' && action.damages?.length">{{ formatDamages(action.damages) }}</span>
                                                 <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                                             </div>
                                             <div class="hl"></div>
@@ -1297,7 +1297,7 @@
                                             <div class="kpi muted small" style="margin-top:6px">
                                                 <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
                                                 <span class="pill" v-if="a.range">距离: {{a.range}}</span>
-                                                <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
+                                                <span class="pill" v-if="a.type !== 'utility' && a.damages?.length">{{ formatDamages(a.damages) }}</span>
                                                 <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
                                             </div>
                                         </div>
@@ -1361,7 +1361,7 @@
                         </div>
                         <div class="kpi muted small" style="margin-top:6px">
                             <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
-                            <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                            <span class="pill" v-if="action.type !== 'utility' && action.damages?.length">{{ formatDamages(action.damages) }}</span>
                             <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                         </div>
                         <div class="hl"></div>
@@ -1808,7 +1808,7 @@
                                             </div>
                                             <div class="kpi muted small" style="margin-top:6px">
                                                 <span class="pill" v-if="action.attackBonus">攻击+{{action.attackBonus}}</span>
-                                                <span class="pill" v-if="action.damages?.length">{{ formatDamages(action.damages) }}</span>
+                                                <span class="pill" v-if="action.type !== 'utility' && action.damages?.length">{{ formatDamages(action.damages) }}</span>
                                                 <span class="pill" v-if="action.saveDC">豁免 DC{{action.saveDC}} {{action.saveAbility}}</span>
                                             </div>
                                             <div class="hl"></div>
@@ -1858,7 +1858,7 @@
                                             <div class="kpi muted small" style="margin-top:6px">
                                                 <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
                                                 <span class="pill" v-if="a.range">距离: {{a.range}}</span>
-                                                <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
+                                                <span class="pill" v-if="a.type !== 'utility' && a.damages?.length">{{ formatDamages(a.damages) }}</span>
                                                 <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
                                             </div>
                                         </div>
@@ -2450,7 +2450,7 @@
                             <div class="kpi muted small" style="margin-top:6px">
                                 <span class="pill" v-if="a.attackBonus">攻击+{{a.attackBonus}}</span>
                                 <span class="pill" v-if="a.range">距离: {{a.range}}</span>
-                                <span class="pill" v-if="a.damages?.length">{{ formatDamages(a.damages) }}</span>
+                                <span class="pill" v-if="a.type !== 'utility' && a.damages?.length">{{ formatDamages(a.damages) }}</span>
                                 <span class="pill" v-if="a.range">距离: {{a.range}}</span>
                                 <span class="pill" v-if="a.saveDC">豁免 DC{{a.saveDC}} {{a.saveAbility}}</span>
                             </div>
