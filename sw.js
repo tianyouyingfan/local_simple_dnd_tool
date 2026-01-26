@@ -12,6 +12,7 @@ const urlsToCache = [
   'js/vendor/dexie.js',
   'js/modules/domain/battle/conditions.js',
   'js/modules/app/keyboard-shortcuts.js',
+  'js/modules/app/ui-layers.js',
   'js/modules/composables/use-computed.js',
   'js/modules/composables/use-image-cropper.js',
   'js/modules/composables/use-toasts.js',

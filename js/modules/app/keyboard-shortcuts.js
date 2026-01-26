@@ -6,9 +6,10 @@ import { isTypingInInput } from 'helpers';
 import { openQuickDice } from 'quick-dice';
 import { nextTurn, prevTurn } from 'battle-core';
 import { route, ui, uiState } from 'state';
-import { cancelActorViewerEdit, saveActorViewerChanges } from 'actor-viewer';
-import { closeMonsterEditor, closePCEditor, saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
+import { saveActorViewerChanges } from 'actor-viewer';
+import { saveAbility, saveAction, saveMonsterAsNew, savePC, updateMonster } from 'entity-crud';
 import { runAction } from 'action-execution';
+import { closeTopLayerIfClosable } from 'ui-layers';
 
 export function setupKeyboardShortcuts() {
     let lastD = 0, lastA = 0, lastR = 0, lastL = 0;
@@ -72,25 +73,12 @@ export function setupKeyboardShortcuts() {
         }
     };
 
-    const closeEditorContextNoSave = () => {
-        if (ui.actionEditor.open) { ui.actionEditor.open = false; return; }
-        if (ui.abilityEditor.open) { ui.abilityEditor.open = false; return; }
-        if (ui.monsterEditor.open) { closeMonsterEditor(); return; }
-        if (ui.pcEditor.open) { closePCEditor(); return; }
-        if (ui.actorViewer.open) {
-            cancelActorViewerEdit();
-            ui.actorViewer.open = false;
-        }
-    };
-
     const tryHandleEditorDoubleTap = (e, now) => {
         if (!isEditorContextOpen()) return false;
         if (e.repeat) return false;
 
         const isSpace = e.code === 'Space' || e.key === ' ';
-        const isQ = e.key?.toLowerCase?.() === 'q';
-
-        if (!isSpace && !isQ) return false;
+        if (!isSpace) return false;
 
         if (isSpace) {
             if (now - lastSpace < DOUBLE_TAP_MS) {
@@ -106,27 +94,34 @@ export function setupKeyboardShortcuts() {
             return false;
         }
 
-        if (isQ) {
-            if (now - lastQ < DOUBLE_TAP_MS) {
-                e.preventDefault();
-                rollbackLastCharIfMatches(lastQKey);
-                lastQ = 0;
-                lastSpace = 0;
-                closeEditorContextNoSave();
-                return true;
-            }
-            lastQ = now;
-            lastQKey = e.key;
+        return false;
+    };
+
+    const tryHandleCloseTopLayerDoubleTap = (e, now) => {
+        if (e.repeat) return false;
+        if (e.key?.toLowerCase?.() !== 'q') return false;
+
+        if (now - lastQ < DOUBLE_TAP_MS) {
+            const closed = closeTopLayerIfClosable();
+            lastQ = 0;
             lastSpace = 0;
-            return false;
+            if (!closed) return false;
+
+            e.preventDefault();
+            rollbackLastCharIfMatches(lastQKey);
+            return true;
         }
 
+        lastQ = now;
+        lastQKey = e.key;
+        lastSpace = 0;
         return false;
     };
 
     const onKeyDown = (e) => {
         const now = Date.now();
         if (tryHandleEditorDoubleTap(e, now)) return;
+        if (tryHandleCloseTopLayerDoubleTap(e, now)) return;
         if (isTypingInInput()) return;
 
         if (e.key.toLowerCase() === 'd') {
