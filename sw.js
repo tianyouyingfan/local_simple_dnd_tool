@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dnd-assist-v0.5.4-condition-system';
+const CACHE_NAME = 'dnd-assist-v0.5.5-statblock-layout';
 
 const urlsToCache = [
   '/',
@@ -30,6 +30,7 @@ const urlsToCache = [
   'js/modules/infra/persistence/import-export.js',
   'js/modules/media/image-cropper.js',
   'js/modules/shared/helpers.js',
+  'js/modules/shared/statblock.js',
   'js/modules/shared/utils.js',
   'js/modules/state/constants.js',
   'js/modules/state/state.js'

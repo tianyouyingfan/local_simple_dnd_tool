@@ -1,9 +1,10 @@
 import { reactive, ref, computed, watch } from 'vue';
+import { conditionDefinitions } from 'conditions';
 
 
 export const monsterTypes = ref(['aberration', 'beast', 'celestial', 'construct', 'dragon', 'elemental', 'fey', 'fiend', 'giant', 'humanoid', 'monstrosity', 'ooze', 'plant', 'undead', 'goblinoid']);
 export const damageTypes = ref(['钝击', '穿刺', '斩击', '火焰', '寒冷', '力场', '毒素', '酸性', '闪电', '心灵', '光耀', '死灵', '雷鸣']);
-export const conditionTypes = ref(['charmed', 'frightened', 'poisoned', 'prone', 'restrained', 'blinded']);
+export const conditionTypes = computed(() => Object.keys(conditionDefinitions));
 export const monsterTypeTranslations = {
     'aberration': '异怪',
     'beast': '野兽',

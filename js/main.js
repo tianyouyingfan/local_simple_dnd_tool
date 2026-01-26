@@ -1,4 +1,4 @@
-import { createApp, watch, nextTick } from 'vue';
+import { createApp, watch, nextTick, computed } from 'vue';
 import * as utils from 'utils';
 import {
   route, monsters, abilities, pcs, actions, monsterGroups, monsterFilters,
@@ -59,6 +59,7 @@ import {
 } from 'monster-groups';
 import { setupKeyboardShortcuts } from 'keyboard-shortcuts';
 import { useComputed } from 'use-computed';
+import { buildStatblockViewModel } from 'statblock';
 import {
   CONDITION_KEYS,
   buildStatusDisplayName,
@@ -211,6 +212,24 @@ createApp({
       return rolledDamages.map(d => `${d.amount} ${d.type}`).join(' + ');
     }
 
+    const translateType = (t) => monsterTypeTranslations[t] || t;
+
+    const actorViewerEntity = computed(() => {
+      if (!ui.actorViewer.open) return null;
+      if (!ui.actorViewer.actor) return null;
+      return ui.actorViewer.isEditing ? ui.actorViewer.draft : ui.actorViewer.actor;
+    });
+
+    const actorViewerStatblock = computed(() => {
+      const entity = actorViewerEntity.value;
+      const kind = ui.actorViewer.actor?.type === 'pc' ? 'pc' : 'monster';
+      if (!entity) return null;
+      return buildStatblockViewModel(entity, { kind, translateType });
+    });
+
+    const monsterDraftStatblock = computed(() => buildStatblockViewModel(uiState.monsterDraft, { kind: 'monster', translateType }));
+    const pcDraftStatblock = computed(() => buildStatblockViewModel(uiState.pcDraft, { kind: 'pc', translateType }));
+
     // 6. Return
     return {
       // State
@@ -230,6 +249,7 @@ createApp({
 
       // Methods
       toast, removeToast, loadAll, seedDemo,
+      actorViewerEntity, actorViewerStatblock, monsterDraftStatblock, pcDraftStatblock,
 
       toggleTypeFilter, toggleMonsterDraftType, toggleDamageModifier, toggleConditionImmunity,
 
@@ -282,11 +302,12 @@ createApp({
       // Template helpers
       formatDamages, formatRolledDamages,
       mod: (v) => utils.abilityMod(Number(v) || 10),
-      translateType: (t) => monsterTypeTranslations[t] || t,
+      translateType,
       getConditionTargetBadges: (target) => getConditionTargetBadges(currentActor.value, target, ui.selectedAction, ui.rollMode),
       isActorIncapacitated: (p) => isActorIncapacitated(p),
       isSaveDisadvantageTarget: (target, action) => isSaveDisadvantageTarget(target, action),
       formatStatusLabel: (s) => buildStatusDisplayName(s),
+      formatConditionKey: (key) => getConditionDefinition(key)?.displayName || String(key ?? ''),
       isStatusManual: (s) => {
         const normalized = normalizeStatusInstance(s);
         return isManualOrPartialCondition(normalized?.key);

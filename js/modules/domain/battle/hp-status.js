@@ -5,7 +5,7 @@ import { nextTick } from 'vue';
 import { battle, currentActor, ui, statusCatalog, quickDamageInput } from 'state';
 import { clamp } from 'utils';
 import { useToasts } from 'use-toasts';
-import { getConditionDefinition, getStatusIdentity, normalizeStatusInstance, getExhaustionLevel, CONDITION_KEYS } from 'conditions';
+import { getConditionDefinition, getStatusIdentity, normalizeStatusInstance, getExhaustionLevel, CONDITION_KEYS, isActorImmuneToCondition } from 'conditions';
 
 const { toast } = useToasts();
 
@@ -140,6 +140,13 @@ export function applyStatus() {
     if (!instance?.key) return toast('该状态暂不支持（缺少状态定义）');
     const def = getConditionDefinition(instance.key);
     if (def?.requiresSource) return toast('不可直接添加有施加状态源的状态');
+    if (isActorImmuneToCondition(t, instance)) {
+        ui.statusPicker.open = false;
+        const label = instance.key === CONDITION_KEYS.EXHAUSTION && instance.meta?.level
+            ? `力竭 ${instance.meta.level}级`
+            : (def?.displayName || instance.name || ui.statusPicker.selectedName);
+        return toast(`${t.name} 免疫 ${label}`);
+    }
 
     if (instance.key === CONDITION_KEYS.EXHAUSTION) {
         const prevLevel = getExhaustionLevel(t) || 0;

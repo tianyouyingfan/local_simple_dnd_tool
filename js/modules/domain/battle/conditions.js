@@ -332,6 +332,24 @@ export function normalizeStatusInstance(raw) {
   };
 }
 
+function normalizeConditionImmunityEntry(value) {
+  if (!value) return null;
+  const v = String(value).trim();
+  return normalizeConditionKey(v) || getConditionKeyFromStatusName(v);
+}
+
+export function isActorImmuneToCondition(actor, statusOrKey) {
+  const list = actor?.immunities?.conditions;
+  if (!Array.isArray(list) || list.length === 0) return false;
+  const set = new Set(list.map(normalizeConditionImmunityEntry).filter(Boolean));
+
+  const key = typeof statusOrKey === 'string'
+    ? (normalizeConditionKey(statusOrKey) || getConditionKeyFromStatusName(statusOrKey))
+    : (normalizeConditionKey(statusOrKey?.key) || getConditionKeyFromStatusName(statusOrKey?.name));
+
+  return !!key && set.has(key);
+}
+
 function normalizedStatuses(participant) {
   const list = participant?.statuses;
   if (!Array.isArray(list)) return [];

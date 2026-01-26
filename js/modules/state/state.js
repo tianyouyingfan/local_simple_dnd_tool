@@ -283,6 +283,10 @@ export const sortedPcDraftActions = computed(() => []);
 export const emptyMonster = () => ({
     name: '',
     avatar: '',
+    size: '',
+    creatureTypeText: '',
+    subtypeText: '',
+    alignment: '',
     cr: 1,
     backgroundImage: '',
     type: [],
@@ -321,6 +325,8 @@ export const uiState = reactive({
     },
     pcDraft: {
         name: '',
+        avatar: '',
+        metaLine: '',
         ac: 14,
         hpMax: 20,
         hpCurrent: 20,
@@ -333,9 +339,13 @@ export const uiState = reactive({
             cha: 10
         },
         actions: [],
+        features: '',
+        resistances: { damage: [], conditions: [] },
+        vulnerabilities: { damage: [], conditions: [] },
+        immunities: { damage: [], conditions: [] },
         backgroundImage: ''
     },
-    actionDraft: { name: '', type: 'attack', damages: [], recharge: 0 },
+    actionDraft: { name: '', type: 'attack', damages: [], recharge: 0, section: '', note: '' },
     groupDraft: {
         name: '',
         monsters: [] // 格式: [{ monsterId: number, name: string, count: number }]

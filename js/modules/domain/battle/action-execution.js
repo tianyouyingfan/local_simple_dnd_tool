@@ -16,6 +16,7 @@ import {
     getExhaustionLevel,
     getStatusIdentity,
     hasCondition,
+    isActorImmuneToCondition,
     isActorIncapacitated,
     isSaveAutoFailTarget,
     normalizeStatusInstance
@@ -206,54 +207,58 @@ export async function runAction() {
                 }
 
                 if (action.onHitStatus) {
-                    const apply = () => {
-                        const info = statusCatalog.value.find(sc => sc.name === action.onHitStatus) || {};
-                        const instance = normalizeStatusInstance({
-                            name: action.onHitStatus,
-                            rounds: action.onHitStatusRounds || 1,
-                            icon: info.icon || '⏳',
-                        });
-                        const def = getConditionDefinition(instance?.key);
-                        if (def?.requiresSource && !instance.sourceUid) instance.sourceUid = actor.uid;
+                    const info = statusCatalog.value.find(sc => sc.name === action.onHitStatus) || {};
+                    const instance = normalizeStatusInstance({
+                        name: action.onHitStatus,
+                        rounds: action.onHitStatusRounds || 1,
+                        icon: info.icon || '⏳',
+                    });
+                    const def = getConditionDefinition(instance?.key);
+                    if (def?.requiresSource && !instance.sourceUid) instance.sourceUid = actor.uid;
 
-                        if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
-                            const prevLevel = getExhaustionLevel(t) || 0;
-                            const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
-                            if (existing) {
-                                const nextLevel = Number(instance.meta?.level) || prevLevel;
-                                const appliedRounds = Math.max(1, Math.floor(Number(instance.rounds) || 1));
-                                existing.meta = { ...(existing.meta || {}) };
-                                existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
-                                if (existing.meta.stepRounds == null) {
-                                    existing.meta.stepRounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+                    if (isActorImmuneToCondition(t, instance)) {
+                        log += `  -> ${t.name} 免疫状态: ${action.onHitStatus}.\n`;
+                    } else {
+                        const apply = () => {
+                            if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
+                                const prevLevel = getExhaustionLevel(t) || 0;
+                                const existing = t.statuses.find(s => s.key === CONDITION_KEYS.EXHAUSTION);
+                                if (existing) {
+                                    const nextLevel = Number(instance.meta?.level) || prevLevel;
+                                    const appliedRounds = Math.max(1, Math.floor(Number(instance.rounds) || 1));
+                                    existing.meta = { ...(existing.meta || {}) };
+                                    existing.meta.level = Math.max(Number(existing.meta.level) || 0, nextLevel);
+                                    if (existing.meta.stepRounds == null) {
+                                        existing.meta.stepRounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+                                    }
+                                    existing.meta.stepRounds = Math.max(Math.floor(Number(existing.meta.stepRounds) || 1), appliedRounds);
+                                    existing.rounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
+                                    existing.name = `力竭 ${existing.meta.level}级`;
+                                    existing.icon = instance.icon;
+                                    applyExhaustionHpCap(t);
+                                    if (prevLevel < 6 && existing.meta.level === 6) {
+                                        checkExhaustion6Death(t);
+                                    }
+                                    log += `  -> ${t.name} 力竭等级提升至 ${existing.meta.level}.\n`;
+                                    return;
                                 }
-                                existing.meta.stepRounds = Math.max(Math.floor(Number(existing.meta.stepRounds) || 1), appliedRounds);
-                                existing.rounds = Math.max(Math.floor(Number(existing.rounds) || 1), appliedRounds);
-                                existing.name = `力竭 ${existing.meta.level}级`;
-                                existing.icon = instance.icon;
-                                applyExhaustionHpCap(t);
-                                if (prevLevel < 6 && existing.meta.level === 6) {
-                                    checkExhaustion6Death(t);
-                                }
-                                log += `  -> ${t.name} 力竭等级提升至 ${existing.meta.level}.\n`;
-                                return;
                             }
-                        }
 
-                        const identity = getStatusIdentity(instance).identity;
-                        if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) return;
+                            const identity = getStatusIdentity(instance).identity;
+                            if (identity && t.statuses.some(s => getStatusIdentity(s).identity === identity)) return;
 
-                        if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
-                            instance.meta = { ...(instance.meta || {}) };
-                            instance.meta.stepRounds = Math.max(1, Math.floor(Number(instance.meta.stepRounds ?? instance.rounds) || 1));
-                            if (instance.meta.level) instance.name = `力竭 ${instance.meta.level}级`;
-                        }
-                        t.statuses.push(instance);
-                        log += `  -> ${t.name} 获得了状态: ${action.onHitStatus}.\n`;
-                    };
+                            if (instance?.key === CONDITION_KEYS.EXHAUSTION) {
+                                instance.meta = { ...(instance.meta || {}) };
+                                instance.meta.stepRounds = Math.max(1, Math.floor(Number(instance.meta.stepRounds ?? instance.rounds) || 1));
+                                if (instance.meta.level) instance.name = `力竭 ${instance.meta.level}级`;
+                            }
+                            t.statuses.push(instance);
+                            log += `  -> ${t.name} 获得了状态: ${action.onHitStatus}.\n`;
+                        };
 
-                    if (action.onHitSaveAbility && action.onHitSaveDC) promptSaveCheck(t, action, apply);
-                    else apply();
+                        if (action.onHitSaveAbility && action.onHitSaveDC) promptSaveCheck(t, action, apply);
+                        else apply();
+                    }
                 }
             } else if (!hit && !d20.isFumble) {
                 ui.notificationQueue.push({
