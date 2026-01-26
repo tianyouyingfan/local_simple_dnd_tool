@@ -118,16 +118,13 @@ export function formatDamages(damages) {
 
 export function formatActionBody(action) {
     if (!action || typeof action !== 'object') return '';
-    const note = typeof action.note === 'string' ? action.note.trim() : '';
     if (action.type === 'attack') {
         const parts = [];
         const attackBonus = safeNumber(action.attackBonus, null);
         if (attackBonus !== null) parts.push(`攻击${formatSigned(attackBonus)}`);
         if (action.range) parts.push(`距离 ${action.range}`);
         if (action.damages) parts.push(`伤害 ${formatDamages(action.damages)}`);
-        const base = parts.join('，');
-        if (!note) return base;
-        return base ? `${base}；${note}` : note;
+        return parts.join('，');
     }
     if (action.type === 'save') {
         const parts = [];
@@ -137,10 +134,9 @@ export function formatActionBody(action) {
         if (dc !== null) parts.push(`豁免 DC ${dc}${ab ? ` ${ab}` : ''}`);
         if (action.damages) parts.push(`伤害 ${formatDamages(action.damages)}`);
         if (action.onSuccess === 'half') parts.push('成功则半伤');
-        const base = parts.join('，');
-        if (!note) return base;
-        return base ? `${base}；${note}` : note;
+        return parts.join('，');
     }
+    const note = typeof action.note === 'string' ? action.note.trim() : '';
     return note;
 }
 
@@ -255,3 +251,4 @@ export function buildStatblockViewModel(entity, { kind, translateType } = {}) {
         sections
     };
 }
+

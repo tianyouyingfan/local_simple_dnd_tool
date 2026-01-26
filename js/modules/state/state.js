@@ -345,7 +345,7 @@ export const uiState = reactive({
         immunities: { damage: [], conditions: [] },
         backgroundImage: ''
     },
-    actionDraft: { name: '', type: 'attack', damages: [], recharge: 0, section: '', note: '' },
+    actionDraft: { name: '', type: 'attack', damages: [], recharge: 0 },
     groupDraft: {
         name: '',
         monsters: [] // 格式: [{ monsterId: number, name: string, count: number }]

@@ -213,16 +213,12 @@ function openActionEditorBase({ action = null, nested, saveTarget, ensurePrivate
 
     if (action) {
         const draft = ensureActionDamages(deepClone(action));
-        draft.section = typeof draft.section === 'string' ? draft.section : '';
-        draft.note = typeof draft.note === 'string' ? draft.note : '';
         uiState.actionDraft = draft;
     } else {
         uiState.actionDraft = ensureActionDamages({
             ...(ensurePrivateId ? { id: crypto.randomUUID() } : {}),
             name: '新动作',
             type: 'attack',
-            section: '',
-            note: '',
             attackBonus: 4,
             range: '近战',
             damages: [{ dice: '1d6+2', type: '斩击', id: crypto.randomUUID() }],
