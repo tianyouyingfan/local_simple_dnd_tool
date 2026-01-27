@@ -214,12 +214,15 @@ export function removeParticipant(uid) {
 export function nextTurn() {
     if (!battle.participants.length) return;
 
-    // Handle end-of-turn logic for the *current* actor before moving
-    const active = currentActor.value;
+    const endedActor = currentActor.value;
     let removed = false;
-    if (active && active.hpCurrent <= 0 && active.type === 'monster') {
-        const deadName = active.name;
-        removeParticipant(active.uid);
+    if (endedActor) {
+        decrementParticipantStatuses(endedActor);
+        decrementActionCooldowns(endedActor);
+    }
+    if (endedActor && endedActor.hpCurrent <= 0 && endedActor.type === 'monster') {
+        const deadName = endedActor.name;
+        removeParticipant(endedActor.uid);
         toast(`怪物【${deadName}】已在回合结束后移除。`);
         removed = true;
     }
@@ -273,10 +276,6 @@ export function nextTurn() {
         checks++;
     }
 
-    if (currentActor.value) {
-        decrementParticipantStatuses(currentActor.value);
-        decrementActionCooldowns(currentActor.value);
-    }
 }
 
 export function prevTurn() {

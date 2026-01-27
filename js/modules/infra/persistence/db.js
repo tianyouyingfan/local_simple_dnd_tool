@@ -13,22 +13,29 @@ db.version(3).stores({
 
 // 导出种子数据函数
 export async function seedIfEmpty() {
-    const count = await db.monsters.count();
-    if (count > 0) return;
-    await db.abilities.bulkAdd([{
-        name: '再生',
-        description: '每回合开始时回复若干生命值。'
-    }, {
-        name: '敏捷闪避',
-        description: '在可见来源的范围效果伤害上掷成功时不受伤，失败时只受半伤。'
-    },]);
-    const actionCount = await db.actions.count();
+    const [monsterCount, abilityCount, actionCount] = await Promise.all([
+        db.monsters.count(),
+        db.abilities.count(),
+        db.actions.count(),
+    ]);
+
+    if (abilityCount === 0) {
+        await db.abilities.bulkAdd([{
+            name: '再生',
+            description: '每回合开始时回复若干生命值。'
+        }, {
+            name: '敏捷闪避',
+            description: '在可见来源的范围效果伤害上掷成功时不受伤，失败时只受半伤。'
+        },]);
+    }
     if (actionCount === 0) {
         await db.actions.bulkAdd([
             { name: '弯刀 (attack)', type: 'attack', attackBonus: 4, damageDice: '1d6+2', damageType: '斩击' },
             { name: '短弓 (attack)', type: 'attack', attackBonus: 4, damageDice: '1d6+2', damageType: '穿刺' },
         ]);
     }
+    if (monsterCount > 0) return;
+
     await db.monsters.bulkAdd([{
         name: '哥布林',
         cr: 0.25,

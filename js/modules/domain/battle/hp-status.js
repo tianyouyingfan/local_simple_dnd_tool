@@ -96,9 +96,10 @@ export async function openQuickDamageEditor(participant) {
 
 export function applyQuickDamage() {
     const { damageAmount, targetUid } = ui.quickDamage;
-    if (typeof damageAmount !== 'number' || damageAmount <= 0) return closeQuickDamageEditor();
+    const n = Number(damageAmount);
+    if (!Number.isFinite(n) || n <= 0) return closeQuickDamageEditor();
     const target = battle.participants.find(p => p.uid === targetUid);
-    if (target) applyHPDelta(target, -Math.abs(damageAmount));
+    if (target) applyHPDelta(target, -Math.abs(n));
     closeQuickDamageEditor();
 }
 

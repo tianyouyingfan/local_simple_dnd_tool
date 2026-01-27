@@ -201,8 +201,9 @@ export function attachActionToDraft(action) {
     const draft = ui.activeEditor === 'pc' ? uiState.pcDraft : uiState.monsterDraft;
     if (!draft) return;
     draft.actions ||= [];
-    const copy = deepClone(action);
+    const copy = ensureActionDamages(deepClone(action));
     delete copy.id;
+    copy.id = newId();
     draft.actions.push(copy);
     toast(`已将动作添加到当前${ui.activeEditor === 'pc' ? 'PC' : '怪物'}`);
     ui.actionPool.open = false;

@@ -136,10 +136,12 @@ export async function runAction() {
             }
 
             const d20 = rollD20(rollMode);
-            const toHit = d20.value + (action.attackBonus || 0);
-            const hit = (d20.value === 20) || (toHit >= t.ac);
+            const attackBonus = Number(action.attackBonus) || 0;
+            const targetAC = Number(t.ac) || 0;
+            const toHit = d20.value + attackBonus;
+            const hit = (d20.value === 20) || (toHit >= targetAC);
 
-            log += `- 目标【${t.name}】 -> d20(${d20.raw.join(',')}) + ${action.attackBonus || 0} = ${toHit} vs AC ${t.ac} => ${d20.isCrit ? '重击' : (hit ? '命中' : '未命中')}\n`;
+            log += `- 目标【${t.name}】 -> d20(${d20.raw.join(',')}) + ${attackBonus} = ${toHit} vs AC ${targetAC} => ${d20.isCrit ? '重击' : (hit ? '命中' : '未命中')}\n`;
 
             if (hit && !d20.isFumble) {
                 const allDamageDetails = [];
@@ -176,15 +178,15 @@ export async function runAction() {
                             ? {
                                 type: 'success',
                                 attacker: actor.name, target: t.name,
-                                toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
-                                toHitResult: toHit, targetAC: t.ac,
+                                toHitRoll: `d20(${d20.raw.join(',')}) + ${attackBonus}`,
+                                toHitResult: toHit, targetAC: targetAC,
                                 damages: allDamageDetails,
                                 totalFinalDamage,
                             }
                             : {
                                 attacker: actor.name, target: t.name,
-                                toHitRoll: `d20(${d20.raw.join(',')}) + ${action.attackBonus || 0}`,
-                                toHitResult: toHit, targetAC: t.ac,
+                                toHitRoll: `d20(${d20.raw.join(',')}) + ${attackBonus}`,
+                                toHitResult: toHit, targetAC: targetAC,
                                 damages: allDamageDetails,
                                 totalFinalDamage,
                             }
