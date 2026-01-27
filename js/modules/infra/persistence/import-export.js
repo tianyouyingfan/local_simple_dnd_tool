@@ -76,6 +76,17 @@ export async function importAll(e) {
         data.actions = stripInvalidIds(data.actions);
         data.monsterGroups = stripInvalidIds(data.monsterGroups);
 
+        const stripIds = (list) => list.map(x => {
+            if (!x || typeof x !== 'object') return x;
+            const copy = { ...x };
+            delete copy.id;
+            return copy;
+        });
+        if (hasDuplicateIds(data.abilities)) data.abilities = stripIds(data.abilities);
+        if (hasDuplicateIds(data.pcs)) data.pcs = stripIds(data.pcs);
+        if (hasDuplicateIds(data.actions)) data.actions = stripIds(data.actions);
+        if (hasDuplicateIds(data.monsterGroups)) data.monsterGroups = stripIds(data.monsterGroups);
+
         const monsterIds = new Set();
         let monstersNeedRepair = false;
         for (const m of data.monsters) {
@@ -95,7 +106,18 @@ export async function importAll(e) {
         }
 
         if (monstersNeedRepair || groupsNeedRepair) {
-            const ok = confirm('检测到导入数据的怪物ID/组合引用不一致。是否自动修复后继续导入？（不修复将取消导入）');
+            const nameCounts = new Map();
+            for (const m of data.monsters) {
+                const name = m?.name;
+                if (!name) continue;
+                nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+            }
+            const hasDuplicateNames = Array.from(nameCounts.values()).some(n => n > 1);
+            const ok = confirm(
+                hasDuplicateNames
+                    ? '检测到导入数据的怪物ID/组合引用不一致，且存在同名怪物。是否自动修复后继续导入？（同名情况下仅按ID修复，无法匹配的组合项会被丢弃；不修复将取消导入）'
+                    : '检测到导入数据的怪物ID/组合引用不一致。是否自动修复后继续导入？（不修复将取消导入）'
+            );
             if (!ok) throw new Error('已取消导入');
 
             const mappings = [];
@@ -113,7 +135,9 @@ export async function importAll(e) {
             const byOldId = new Map(mappings.filter(x => x.oldId != null).map(x => [x.oldId, x]));
             const byName = new Map();
             for (const x of mappings) {
-                if (!byName.has(x.name)) byName.set(x.name, x);
+                if (!x.name) continue;
+                if (nameCounts.get(x.name) !== 1) continue;
+                byName.set(x.name, x);
             }
 
             data.monsterGroups = data.monsterGroups.map(g => {
@@ -151,9 +175,11 @@ export async function importAll(e) {
         await loadAll();
         toast('导入成功');
     } catch (err) {
-        alert('导入失败：' + err.message);
+        const message = (err && typeof err === 'object' && 'message' in err && err.message)
+            ? err.message
+            : String(err || '未知错误');
+        alert('导入失败：' + message);
     } finally {
         e.target.value = '';
     }
 }
-

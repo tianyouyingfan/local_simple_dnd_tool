@@ -24,8 +24,13 @@ export function useImageCropper({
     const cropBox = reactive({ x: 50, y: 50, width: 200, height: 200 });
     let dragging = false;
     const dragStart = { x: 0, y: 0 };
+    let retryTimer = null;
 
     function reset() {
+        if (retryTimer) {
+            clearTimeout(retryTimer);
+            retryTimer = null;
+        }
         sourceImage.value = null;
         modalState.imageUrl = null;
     }
@@ -56,6 +61,7 @@ export function useImageCropper({
     }
 
     function initWithRetry(retryCount = 0) {
+        if (!modalState.open) return;
         const maxRetries = 5;
         const delay = 100 * (retryCount + 1);
         const canvas = canvasRef.value;
@@ -63,9 +69,10 @@ export function useImageCropper({
 
         if (!canvas || !modal) {
             if (retryCount < maxRetries) {
-                setTimeout(() => initWithRetry(retryCount + 1), delay);
+                if (retryTimer) clearTimeout(retryTimer);
+                retryTimer = setTimeout(() => initWithRetry(retryCount + 1), delay);
             } else {
-                modalState.open = false;
+                if (modalState.open) modalState.open = false;
             }
             return;
         }

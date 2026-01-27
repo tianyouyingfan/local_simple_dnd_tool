@@ -17,6 +17,7 @@ const urlsToCache = [
   'index.html',
   'style.css',
   'manifest.json',
+  'icon.ico',
   'icon-192.png',
   'icon-512.png',
   'js/main.js',
@@ -74,8 +75,35 @@ const LEGACY_MODULE_ALIASES = {
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+
+      const required = new Set([
+        toCacheUrl('index.html'),
+        toCacheUrl('style.css'),
+        toCacheUrl('js/main.js'),
+        toCacheUrl('js/vendor/vue.js'),
+        toCacheUrl('js/vendor/dexie.js'),
+      ]);
+
+      const results = await Promise.allSettled(
+        urlsToCache.map(async (url) => {
+          await cache.add(url);
+          return url;
+        })
+      );
+
+      const failedRequired = [];
+      for (let i = 0; i < results.length; i++) {
+        const r = results[i];
+        if (r.status === 'fulfilled') continue;
+        const url = urlsToCache[i];
+        if (required.has(url)) failedRequired.push(url);
+      }
+      if (failedRequired.length) {
+        throw new Error(`SW install failed: required assets not cached (${failedRequired.length})`);
+      }
+    })()
   );
 });
 
@@ -99,10 +127,16 @@ async function networkFirst(request, cacheKey = request) {
     const response = await fetch(request);
     if (response && response.ok) {
       cache.put(cacheKey, response.clone());
+      return response;
     }
-    return response;
+    const cached = await cache.match(cacheKey);
+    return cached || response;
   } catch (_) {
-    return cache.match(cacheKey);
+    const cached = await cache.match(cacheKey);
+    return cached || new Response('Offline', {
+      status: 504,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
   }
 }
 

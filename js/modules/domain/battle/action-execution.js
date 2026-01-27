@@ -332,11 +332,17 @@ export async function runAction() {
 
 export function applySaveOutcomes() {
     const { targets, damages, outcomes, action } = ui.saveOutcomePicker;
+    if (!action || !action.name) {
+        ui.saveOutcomePicker.open = false;
+        toast('豁免结算窗口已失效，请重新执行该动作。');
+        return;
+    }
     let log = `处理 "${action.name}" 的豁免结果：\n`;
 
-    if (!targets.length) { ui.saveOutcomePicker.open = false; return; }
+    if (!Array.isArray(targets) || !targets.length) { ui.saveOutcomePicker.open = false; return; }
 
-    const totalDamageByType = damages.reduce((acc, dmg) => {
+    const safeDamages = Array.isArray(damages) ? damages : [];
+    const totalDamageByType = safeDamages.reduce((acc, dmg) => {
         acc[dmg.type] = (acc[dmg.type] || 0) + dmg.amount;
         return acc;
     }, {});

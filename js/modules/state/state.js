@@ -42,6 +42,9 @@ export const battle = reactive({
     round: 1,
     dragIndex: null,
 });
+export const app = reactive({
+    dataLoaded: false,
+});
 // 状态
 export const statusCatalog = ref([{
     name: '倒地 Prone',

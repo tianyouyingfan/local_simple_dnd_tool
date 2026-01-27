@@ -2,7 +2,7 @@ import { createApp, watch, nextTick, computed } from 'vue';
 import * as utils from 'utils';
 import {
   route, monsters, abilities, pcs, actions, monsterGroups, monsterFilters,
-  battle, ui, uiState, currentActor, participantTiles, hpDelta, quickDamageInput, quickRollInput, statusCatalog
+  battle, ui, uiState, currentActor, participantTiles, hpDelta, quickDamageInput, quickRollInput, statusCatalog, app
 } from 'state';
 import {
   monsterTypes, damageTypes, conditionTypes, monsterTypeTranslations,
@@ -83,17 +83,31 @@ createApp({
     // 2. Watchers
     // battle 持久化
     let persistTimer = null;
+    const persistBattleNow = () => {
+      try {
+        localStorage.setItem('dnd-battle-state', JSON.stringify(battle));
+      } catch (e) {
+        console.error('Failed to persist battle state:', e);
+      }
+    };
+    const flushBattlePersist = () => {
+      if (persistTimer) {
+        clearTimeout(persistTimer);
+        persistTimer = null;
+      }
+      persistBattleNow();
+    };
     watch(battle, () => {
       if (persistTimer) return;
       persistTimer = setTimeout(() => {
         persistTimer = null;
-        try {
-          localStorage.setItem('dnd-battle-state', JSON.stringify(battle));
-        } catch (e) {
-          console.error('Failed to persist battle state:', e);
-        }
+        persistBattleNow();
       }, 200);
     }, { deep: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushBattlePersist();
+    });
+    window.addEventListener('pagehide', flushBattlePersist);
 
     watch(currentActor, (newActor) => {
       if (!newActor) return;
@@ -182,9 +196,11 @@ createApp({
       try {
         await seedIfEmpty();
         await loadAll();
+        app.dataLoaded = true;
       } catch (e) {
         console.error('Failed to load IndexedDB data:', e);
         toast('数据加载失败：请检查浏览器存储权限或退出无痕模式');
+        app.dataLoaded = false;
       }
 
       if (pendingBaseMaxHpFixUids.length) {

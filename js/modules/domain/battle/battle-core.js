@@ -1,7 +1,7 @@
 /**
  * 战斗核心逻辑模块
  */
-import { battle, currentActor, route, ui, monsters, pcs, statusCatalog } from 'state';
+import { battle, currentActor, route, ui, monsters, pcs, statusCatalog, app } from 'state';
 import { deepClone, rollSingleInitiative } from 'utils';
 import { sortParticipantsByInitiative, newId } from 'helpers';
 import { useToasts } from 'use-toasts';
@@ -129,17 +129,23 @@ export function addParticipantsFromPC(pc) {
 }
 
 export async function resetBattle() {
-    if (!confirm('确定要初始化战斗吗？当前战场将被清空，并自动载入所有默认参战单位。')) return;
+    const message = app.dataLoaded
+        ? '确定要初始化战斗吗？当前战场将被清空，并自动载入所有默认参战单位。'
+        : '数据尚未加载完成。确定要清空战斗吗？（本次不会自动加入默认单位）';
+    if (!confirm(message)) return;
     battle.participants = [];
     battle.round = 1;
     battle.currentIndex = 0;
     localStorage.removeItem('dnd-battle-state');
     ui.log = '战斗已初始化。';
 
-    monsters.value.filter(m => m.isDefault).forEach(m => addParticipantAndProcessInitiative(standardizeToParticipant(m)));
-    pcs.value.filter(pc => pc.isDefault).forEach(pc => addParticipantAndProcessInitiative(standardizeToParticipant(pc)));
-
-    toast(`初始化完成，已自动加入 ${battle.participants.length} 个默认单位。`);
+    if (app.dataLoaded) {
+        monsters.value.filter(m => m.isDefault).forEach(m => addParticipantAndProcessInitiative(standardizeToParticipant(m)));
+        pcs.value.filter(pc => pc.isDefault).forEach(pc => addParticipantAndProcessInitiative(standardizeToParticipant(pc)));
+        toast(`初始化完成，已自动加入 ${battle.participants.length} 个默认单位。`);
+    } else {
+        toast('战斗已清空（未自动加入默认单位）。');
+    }
 }
 
 export function rollInitiative() {
