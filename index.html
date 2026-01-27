@@ -2092,7 +2092,7 @@
         </div>
 
         <!-- 模态：图片裁剪 -->
-        <div class="modal-mask" v-if="ui.imageCropper.open" style="z-index: 60;">
+        <div class="modal-mask" v-if="ui.imageCropper.open" :style="{ zIndex: (ui.actorViewer.open || ui.monsterEditor.open || ui.pcEditor.open) ? 96 : 60 }">
             <div class="modal" ref="cropperModal">
                 <div class="title">裁剪图片</div>
                 <div class="hl"></div>
@@ -2110,7 +2110,7 @@
         </div>
 
         <!-- 模态：头像裁剪 -->
-        <div class="modal-mask" v-if="ui.avatarCropper.open" style="z-index: 60;">
+        <div class="modal-mask" v-if="ui.avatarCropper.open" :style="{ zIndex: (ui.actorViewer.open || ui.monsterEditor.open || ui.pcEditor.open) ? 96 : 60 }">
             <div class="modal" ref="avatarCropperModal">
                 <div class="title">裁剪头像</div>
                 <div class="hl"></div>
@@ -2413,7 +2413,7 @@
         </div>
 
         <!-- 模态：力竭6级死亡确认 -->
-        <div class="modal-mask" v-if="ui.exhaustionDeathConfirm.open" style="z-index: 60;">
+        <div class="modal-mask" v-if="ui.exhaustionDeathConfirm.open" :style="{ zIndex: (ui.actorViewer.open || ui.monsterEditor.open || ui.pcEditor.open) ? 96 : 60 }">
             <div class="modal" style="max-width:400px">
                 <div class="row">
                     <div class="title">确认死亡</div>
@@ -2430,7 +2430,7 @@
         </div>
 
         <!-- 模态：动作管理 -->
-        <div class="modal-mask" v-if="ui.actionsViewer.open" style="z-index: 55;">
+        <div class="modal-mask" v-if="ui.actionsViewer.open" :style="{ zIndex: (ui.actorViewer.open || ui.monsterEditor.open || ui.pcEditor.open) ? 96 : 55 }">
             <div class="modal">
                 <div class="row">
                     <div class="title">管理动作 (私有库)</div>
